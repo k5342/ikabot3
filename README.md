@@ -16,6 +16,8 @@ Discord サーバにボットを参加させたのち、ボットに以下のよ
 @ikabot3 オープンマッチ
 ```
 
+注: Discord の Message Content Intent を有効にするとメンション無しで呼び出すことができます。その場合、ボットは受け取ったすべてのメッセージを検索コマンドとして処理し、ステージ情報の検索結果が空でない場合のみメッセージを送信します。Message Content Intent は Privilleged Intent なのでデフォルトでは無効化されています。Message Content Intent を有効化するには Discord Web Developer Portal で有効化したのち、.env の `IKABOT3_ALLOW_MESSAGE_CONTENT_INTENT` を `TRUE` にセットします（`FALSE` でも動作はするようです）。
+
 ### 現在のステージ情報を得る
 キーワードに反応します
 - `オープン`, `オープンマッチ` ... 現在のオープンマッチのステージ情報を返却します

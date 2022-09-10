@@ -8,6 +8,7 @@ import (
 )
 
 type SearchQuery struct {
+	OriginalText       string
 	RelativeIndex      int
 	RelativeIndexValid bool
 	TimeIndex          int
@@ -74,7 +75,7 @@ func Parse(input string) *SearchQuery {
 	   ガチマ 20
 	   次のエリア
 	*/
-	regex := regexp.MustCompile(`(((次の|前の)*)((\d{0,2}) ?時の)?(ナワバリ(バトル)?|(ガチマッチ|ガチマ|ガチ|リグマ|(リーグ|バンカラ|オープン|チャレンジ)(マッチ)?)?(ガチ)?(エリア|ホコ|ホコバトル|ヤグラ|アサリ)?) ?(\d{0,2}))`)
+	regex := regexp.MustCompile(`(((次の|前の)*)((\d{0,2}) ?時の)?(ナワバリ(バトル)?|(ガチマッチ|ガチマ|ガチ|リグマ|(リーグ|バンカラ|オープン|チャレンジ)(マッチ)?)?(ガチ)?(エリア|ホコ|ホコバトル|ヤグラ|アサリ)?) ?(\d{0,2}))$`)
 	fss := regex.FindStringSubmatch(input)
 	fmt.Printf("%#v\n", fss)
 	var timeIndex int
@@ -87,6 +88,7 @@ func Parse(input string) *SearchQuery {
 	}
 	rindex, rvalid := countRelativeIdentifier(fss[2])
 	return &SearchQuery{
+		OriginalText:       fss[0],
 		RelativeIndex:      rindex,
 		RelativeIndexValid: rvalid,
 		TimeIndex:          timeIndex,
