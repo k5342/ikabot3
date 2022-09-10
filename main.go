@@ -53,7 +53,7 @@ func main() {
 		fmt.Printf("%#v\n", scheduleStore.Search(query))
 	}
 
-	bot, err := LaunchDiscordBot(os.Getenv("IKABOT3_TOKEN"))
+	bot, err := LaunchDiscordBot(os.Getenv("IKABOT3_TOKEN"), os.Getenv("IKABOT3_ALLOW_MESSAGE_CONTENT_INTENT") == "TRUE")
 	if err != nil {
 		logger.Sugar().Errorw("bot creation failed", err)
 	}

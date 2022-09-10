@@ -9,23 +9,28 @@ import (
 )
 
 type DiscordBot struct {
-	Session *discordgo.Session
+	Session                   *discordgo.Session
+	AllowMessageContentIntent bool
 }
 
-func LaunchDiscordBot(botToken string) (*DiscordBot, error) {
+func LaunchDiscordBot(botToken string, allowMessageContentIntent bool) (*DiscordBot, error) {
 	dg, err := discordgo.New("Bot " + botToken)
 	if err != nil {
 		return nil, err
 	}
 	dg.AddHandler(messageCreate)
-	dg.Identify.Intents = discordgo.IntentsGuildMessages
+	dg.Identify.Intents |= discordgo.IntentsGuildMessages
+	if allowMessageContentIntent {
+		dg.Identify.Intents |= discordgo.IntentMessageContent
+	}
 	err = dg.Open()
 	if err != nil {
 		return nil, err
 	}
 
 	return &DiscordBot{
-		Session: dg,
+		Session:                   dg,
+		AllowMessageContentIntent: allowMessageContentIntent,
 	}, nil
 }
 
@@ -94,11 +99,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.Bot {
 		return
 	}
-	if !isMentioned(s.State.User, m.Mentions) {
-		return
-	}
 	input := m.Message.Content
-	fmt.Println(input)
 	if input == "" {
 		return
 	}
@@ -110,6 +111,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// parse
 	query := Parse(input)
+
+	// ignore when no match
+	if query.OriginalText == "" {
+		return
+	}
 
 	// query
 	scheduleStore.MaybeRefresh()
@@ -124,7 +130,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, err = s.ChannelMessageSendEmbedReply(m.ChannelID, createSingleStageInfoEmbed(sr), m.Reference())
 		}
 	} else {
-		_, err = s.ChannelMessageSendReply(m.ChannelID, "Not Found!", m.Reference())
+		if isMentioned(s.State.User, m.Mentions) {
+			_, err = s.ChannelMessageSendReply(m.ChannelID, "Not Found!", m.Reference())
+		}
 	}
 	fmt.Println(err)
 }
