@@ -101,13 +101,15 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 	// search case #2, #3: lookup by time
 	// assume Timestamp in API results is JST
 	loc, _ := time.LoadLocation("Asia/Tokyo")
-	absoluteStartTime := (int(timeStamp.In(loc).Hour()/2)*2 + 1) % 24
+	absoluteStartTime := (timeStamp.In(loc).Hour() - ((timeStamp.In(loc).Hour() + 1) % 2)) % 24
 	if query.RelativeIndex != 0 {
 		absoluteStartTime += query.RelativeIndex * 2
 		absoluteStartTime %= 24
 	}
+	// XXX: we cannot distinguish 12am and zero-value (undefined) here,
+	// but this issue could be minor because start_time for this slot [11pm, 1am) is rarely specified as 0.
 	if query.TimeIndex != 0 {
-		absoluteStartTime = (int(query.TimeIndex/2)*2 + 1) % 24
+		absoluteStartTime = (query.TimeIndex - ((query.TimeIndex + 1) % 2)) % 24
 	}
 	fmt.Println(absoluteStartTime)
 
