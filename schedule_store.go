@@ -91,19 +91,33 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 
 	// search case #1: filter by rule
 	if query.Rule != "" {
-		var matched *TimeSlotInfo
-		var found bool
-		skipCount, err := strconv.Atoi(query.RelativeIndex)
+		var skipCount int
+		sc, err := strconv.Atoi(query.RelativeIndex)
 		if query.RelativeIndex != "" && err == nil {
-			matched, found = lookupByRule(target, query.Rule, skipCount)
+			// valid
+			skipCount = sc
 		} else {
-			matched, found = lookupByRule(target, query.Rule, 0)
+			skipCount = 0
 		}
-		return SearchResult{
-			Query:      query,
-			Found:      found,
-			IsTwoSlots: false,
-			Slot1:      matched,
+
+		if query.Mode == "BANKARA" {
+			matched1, found1 := lookupByRule(info.BankaraChallenge, query.Rule, skipCount)
+			matched2, found2 := lookupByRule(info.BankaraOpen, query.Rule, skipCount)
+			return SearchResult{
+				Query:      query,
+				Found:      found1 || found2,
+				IsTwoSlots: true,
+				Slot1:      matched1,
+				Slot2:      matched2,
+			}
+		} else {
+			matched, found := lookupByRule(target, query.Rule, skipCount)
+			return SearchResult{
+				Query:      query,
+				Found:      found,
+				IsTwoSlots: false,
+				Slot1:      matched,
+			}
 		}
 	}
 

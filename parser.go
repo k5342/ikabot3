@@ -26,6 +26,11 @@ func countRelativeIdentifier(input string) (result int) {
 	return next - prev
 }
 
+func isRuleName(input string) bool {
+	regex := regexp.MustCompile("(ガチ)?(エリア|ホコ|ホコバトル|ヤグラ|アサリ)")
+	return regex.MatchString(input)
+}
+
 func searchModeIdentifier(input string) string {
 	if strings.HasPrefix(input, "ガチマ") || strings.HasPrefix(input, "チャレンジ") {
 		return "CHALLENGE"
@@ -38,6 +43,9 @@ func searchModeIdentifier(input string) string {
 	}
 	if strings.HasPrefix(input, "バカマ") || strings.HasPrefix(input, "バンカラ") {
 		// show both CHALLENGE and OPEN
+		return "BANKARA"
+	}
+	if isRuleName(input) {
 		return "BANKARA"
 	}
 	return ""
