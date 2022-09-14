@@ -3,17 +3,15 @@ package main
 import (
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
 type SearchQuery struct {
-	OriginalText       string
-	RelativeIndex      int
-	RelativeIndexValid bool
-	TimeIndex          int
-	Mode               string
-	Rule               string
+	OriginalText  string
+	RelativeIndex string
+	TimeIndex     string
+	Mode          string
+	Rule          string
 }
 
 // <command> := [前の|次の]+<type> | <type><time>
@@ -21,11 +19,10 @@ type SearchQuery struct {
 // <mode> := ナワバリ[バトル]? | [ガチ|オープン|チャレンジ][マッチ]?
 // <time> := 0, 1, ..., 24
 
-// valid is to destinguish zero-value vs calcuration result (just for nit case)
-func countRelativeIdentifier(input string) (result int, valid bool) {
+func countRelativeIdentifier(input string) (result int) {
 	next := strings.Count(input, IDENTIFIER_NEXT)
 	prev := strings.Count(input, IDENTIFIER_PREV)
-	return next - prev, (next > 0 || prev > 0)
+	return next - prev
 }
 
 func searchModeIdentifier(input string) string {
@@ -78,21 +75,25 @@ func Parse(input string) *SearchQuery {
 	regex := regexp.MustCompile(`(((次の|前の)*)((\d{0,2}) ?時の)?(ナワバリ(バトル)?|(ガチマッチ|ガチマ|ガチ|リグマ|(リーグ|バンカラ|オープン|チャレンジ)(マッチ)?)?(ガチ)?(エリア|ホコ|ホコバトル|ヤグラ|アサリ)?) ?(\d{0,2}))$`)
 	fss := regex.FindStringSubmatch(input)
 	fmt.Printf("%#v\n", fss)
-	var timeIndex int
+	var timeIndex string
 	if fss[5] != "" {
-		timeIndex, _ = strconv.Atoi(fss[5])
+		timeIndex = fss[5]
 	} else if fss[13] != "" {
-		timeIndex, _ = strconv.Atoi(fss[13])
+		timeIndex = fss[13]
 	} else {
-		timeIndex = 0
+		timeIndex = ""
 	}
-	rindex, rvalid := countRelativeIdentifier(fss[2])
+	var rindex string
+	if fss[2] == "" {
+		rindex = ""
+	} else {
+		rindex = string(countRelativeIdentifier(fss[2]))
+	}
 	return &SearchQuery{
-		OriginalText:       fss[0],
-		RelativeIndex:      rindex,
-		RelativeIndexValid: rvalid,
-		TimeIndex:          timeIndex,
-		Mode:               searchModeIdentifier(fss[6]),
-		Rule:               searchRuleIdentifier(fss[12]),
+		OriginalText:  fss[0],
+		RelativeIndex: rindex,
+		TimeIndex:     timeIndex,
+		Mode:          searchModeIdentifier(fss[6]),
+		Rule:          searchRuleIdentifier(fss[12]),
 	}
 }
