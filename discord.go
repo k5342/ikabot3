@@ -104,8 +104,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	flagMentioned := isMentioned()
-
 	// remove mention syntax
 	regex := regexp.MustCompile(` *<@&?\d+?> *`)
 	input = regex.ReplaceAllString(input, "")
