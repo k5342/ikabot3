@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -90,7 +91,14 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 
 	// search case #1: filter by rule
 	if query.Rule != "" {
-		matched, found := lookupByRule(target, query.Rule, query.RelativeIndex)
+		var matched *TimeSlotInfo
+		var found bool
+		skipCount, err := strconv.Atoi(query.RelativeIndex)
+		if query.RelativeIndex != "" && err != nil {
+			matched, found = lookupByRule(target, query.Rule, skipCount)
+		} else {
+			matched, found = lookupByRule(target, query.Rule, 0)
+		}
 		return SearchResult{
 			Query:      query,
 			Found:      found,
@@ -103,14 +111,21 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 	// assume Timestamp in API results is JST
 	loc, _ := time.LoadLocation("Asia/Tokyo")
 	absoluteStartTime := (timeStamp.In(loc).Hour() - ((timeStamp.In(loc).Hour() + 1) % 2)) % 24
-	if query.RelativeIndex != 0 {
-		absoluteStartTime += query.RelativeIndex * 2
-		absoluteStartTime %= 24
+	if absoluteStartTime < 0 {
+		absoluteStartTime = 23
 	}
-	// XXX: we cannot distinguish 12am and zero-value (undefined) here,
-	// but this issue could be minor because start_time for this slot [11pm, 1am) is rarely specified as 0.
-	if query.TimeIndex != 0 {
-		absoluteStartTime = (query.TimeIndex - ((query.TimeIndex + 1) % 2)) % 24
+	if query.RelativeIndex != "" {
+		relativeIdx, err := strconv.Atoi(query.RelativeIndex)
+		if err != nil {
+			absoluteStartTime += relativeIdx * 2
+			absoluteStartTime %= 24
+		}
+	}
+	if query.TimeIndex != "" {
+		timeIdx, err := strconv.Atoi(query.TimeIndex)
+		if err != nil {
+			absoluteStartTime = (timeIdx - ((timeIdx + 1) % 2)) % 24
+		}
 	}
 	fmt.Println(absoluteStartTime)
 
