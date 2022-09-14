@@ -13,13 +13,14 @@ type ScheduleStore struct {
 }
 
 func NewScheduleStore() ScheduleStore {
-	return ScheduleStore{}
+	return ScheduleStore{
+		cache: NewFileCache("./", "api_call_cache"),
+	}
 }
 
 func (ss *ScheduleStore) MaybeRefresh() {
 	ss.Lock()
 	defer ss.Unlock()
-	ss.cache = NewFileCache("./", "api_call_cache")
 	cached := ss.cache.MaybeGet(time.Minute * 30)
 	if cached == nil {
 		// outdated. refresh schedule info
