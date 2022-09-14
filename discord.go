@@ -86,7 +86,7 @@ func createTwoStageInfoEmbeds(sr SearchResult) []*discordgo.MessageEmbed {
 	return []*discordgo.MessageEmbed{embed1, embed2}
 }
 
-func isMentioned(user *discordgo.User, mentions []*discordgo.User) bool {
+func isMentioned(user *discordgo.User, mentions []*discordgo.User, messageContent string) bool {
 	for _, mention := range mentions {
 		if mention.ID == user.ID {
 			return true
@@ -103,8 +103,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if input == "" {
 		return
 	}
+
+	flagMentioned := isMentioned()
+
 	// remove mention syntax
-	regex := regexp.MustCompile(` *<@\d+?> *`)
+	regex := regexp.MustCompile(` *<@&?\d+?> *`)
 	input = regex.ReplaceAllString(input, "")
 	// remove spaces
 	input = strings.ReplaceAll(input, " ", "")
@@ -130,7 +133,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, err = s.ChannelMessageSendEmbedReply(m.ChannelID, createSingleStageInfoEmbed(sr), m.Reference())
 		}
 	} else {
-		if isMentioned(s.State.User, m.Mentions) {
+		if isMentioned(s.State.User, m.Mentions, input) {
 			_, err = s.ChannelMessageSendReply(m.ChannelID, "Not Found!", m.Reference())
 		}
 	}
