@@ -72,6 +72,10 @@ Discord サーバにボットを参加させたのち、ボットに以下のよ
 @ikabot3 次のガチヤグラ
 ```
 
+## 実行例
+![image](https://user-images.githubusercontent.com/1993005/190213084-fd714e32-2a50-44ad-a884-e279eeb2986f.png)
+![image](https://user-images.githubusercontent.com/1993005/190213307-9f4ea554-5de4-4519-ae52-b77be7eefc18.png)
+
 ## TODO
 - Support slash commands
 - Remove many debug codes
