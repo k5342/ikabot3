@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -87,7 +88,7 @@ func Parse(input string) *SearchQuery {
 	if fss[2] == "" {
 		rindex = ""
 	} else {
-		rindex = string(countRelativeIdentifier(fss[2]))
+		rindex = strconv.Itoa(countRelativeIdentifier(fss[2]))
 	}
 	return &SearchQuery{
 		OriginalText:  fss[0],
