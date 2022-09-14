@@ -38,19 +38,6 @@ func (bot *DiscordBot) CloseDiscordBot() {
 	bot.Session.Close()
 }
 
-func createSingleStageInfoEmbed(sr SearchResult) *discordgo.MessageEmbed {
-	embed := &discordgo.MessageEmbed{
-		Title: sr.Slot1.Rule.Name,
-		Author: &discordgo.MessageEmbedAuthor{
-			Name: printAsReadableName(sr.Query.Mode),
-		},
-		Description: fmt.Sprintf("%d時～%d時\n\n%s\n%s",
-			sr.Slot1.StartTime.Hour(), sr.Slot1.EndTime.Hour(),
-			sr.Slot1.Stages[0].Name, sr.Slot1.Stages[1].Name),
-	}
-	return embed
-}
-
 func printAsReadableName(mode string) string {
 	if mode == "REGULAR" {
 		return "レギュラーマッチ"
@@ -64,25 +51,26 @@ func printAsReadableName(mode string) string {
 	return ""
 }
 
+func createMessageEmbedFromTimeSlotInfo(tsi *TimeSlotInfo, modeLabel string) *discordgo.MessageEmbed {
+	return &discordgo.MessageEmbed{
+		Title: tsi.Rule.Name,
+		Author: &discordgo.MessageEmbedAuthor{
+			Name: printAsReadableName(modeLabel),
+		},
+		Description: fmt.Sprintf("%d/%d %d時～%d/%d %d時\n\n%s\n%s",
+			tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
+			tsi.EndTime.Month(), tsi.EndTime.Day(), tsi.EndTime.Hour(),
+			tsi.Stages[0].Name, tsi.Stages[1].Name),
+	}
+}
+
+func createSingleStageInfoEmbed(sr SearchResult) *discordgo.MessageEmbed {
+	return createMessageEmbedFromTimeSlotInfo(sr.Slot1, sr.Query.Mode)
+}
+
 func createTwoStageInfoEmbeds(sr SearchResult) []*discordgo.MessageEmbed {
-	embed1 := &discordgo.MessageEmbed{
-		Title: sr.Slot1.Rule.Name,
-		Author: &discordgo.MessageEmbedAuthor{
-			Name: printAsReadableName("CHALLENGE"),
-		},
-		Description: fmt.Sprintf("%d時～%d時\n\n%s\n%s",
-			sr.Slot1.StartTime.Hour(), sr.Slot1.EndTime.Hour(),
-			sr.Slot1.Stages[0].Name, sr.Slot1.Stages[1].Name),
-	}
-	embed2 := &discordgo.MessageEmbed{
-		Title: sr.Slot2.Rule.Name,
-		Author: &discordgo.MessageEmbedAuthor{
-			Name: printAsReadableName("OPEN"),
-		},
-		Description: fmt.Sprintf("%d時～%d時\n\n%s\n%s",
-			sr.Slot2.StartTime.Hour(), sr.Slot2.EndTime.Hour(),
-			sr.Slot2.Stages[0].Name, sr.Slot2.Stages[1].Name),
-	}
+	embed1 := createMessageEmbedFromTimeSlotInfo(sr.Slot1, "CHALLENGE")
+	embed2 := createMessageEmbedFromTimeSlotInfo(sr.Slot2, "OPEN")
 	return []*discordgo.MessageEmbed{embed1, embed2}
 }
 
@@ -92,6 +80,7 @@ func isMentioned(user *discordgo.User, mentions []*discordgo.User, messageConten
 			return true
 		}
 	}
+
 	return false
 }
 
