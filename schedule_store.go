@@ -94,7 +94,7 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 		var matched *TimeSlotInfo
 		var found bool
 		skipCount, err := strconv.Atoi(query.RelativeIndex)
-		if query.RelativeIndex != "" && err != nil {
+		if query.RelativeIndex != "" && err == nil {
 			matched, found = lookupByRule(target, query.Rule, skipCount)
 		} else {
 			matched, found = lookupByRule(target, query.Rule, 0)
@@ -116,14 +116,14 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 	}
 	if query.RelativeIndex != "" {
 		relativeIdx, err := strconv.Atoi(query.RelativeIndex)
-		if err != nil {
+		if err == nil {
 			absoluteStartTime += relativeIdx * 2
 			absoluteStartTime %= 24
 		}
 	}
 	if query.TimeIndex != "" {
 		timeIdx, err := strconv.Atoi(query.TimeIndex)
-		if err != nil {
+		if err == nil {
 			absoluteStartTime = (timeIdx - ((timeIdx + 1) % 2)) % 24
 		}
 	}
