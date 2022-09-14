@@ -1,7 +1,7 @@
 # ikabot3
 メンションすると Splatoon 3 のステージ情報を返却する Discord Bot です。
 
-こちらのボットの API は えむおん氏制作の [Spla3 API](https://spla3.yuu26.com/) を情報取得に利用しています。コマンド体系は Project-Cube 様制作の[イカボット](https://cube-library.net/works/co-production-works/splatoon2-bot-discord/)の書式を参考にしています。
+こちらのボットの API はえむおん氏制作の [Spla3 API](https://spla3.yuu26.com/) を情報取得に利用しています。コマンド体系は Project-Cube 様制作の[イカボット](https://cube-library.net/works/co-production-works/splatoon2-bot-discord/)の書式を参考にしています。
 
 ## ボット起動方法
 .env に Discord Token と [Spla3 API](https://spla3.yuu26.com/) の注意事項をよく読んだ上で `現在以降の全ステージ情報` への URL を記述してください。ボットは以下で起動します。
@@ -16,7 +16,7 @@ Discord サーバにボットを参加させたのち、ボットに以下のよ
 @ikabot3 オープンマッチ
 ```
 
-注: Discord の Message Content Intent を有効にするとメンション無しで呼び出すことができます。その場合、ボットは受け取ったすべてのメッセージを検索コマンドとして処理し、ステージ情報の検索結果が空でない場合のみメッセージを送信します。Message Content Intent は Privilleged Intent なのでデフォルトでは無効化されています。Message Content Intent を有効化するには Discord Web Developer Portal で有効化したのち、.env の `IKABOT3_ALLOW_MESSAGE_CONTENT_INTENT` を `TRUE` にセットします（`FALSE` でも動作はするようです）。
+注: Discord の Message Content Intent を有効にするとメンション無しでも呼び出すことができます。Message Content Intent が利用可能な場合はすべてのメッセージを検索コマンドとして処理し、ステージ情報の検索結果が空でない場合のみメッセージを送信します。Message Content Intent は Privilleged Intent であるため初期値は無効です。Discord の Developer Portal で有効化したのち、.env の `IKABOT3_ALLOW_MESSAGE_CONTENT_INTENT` を `TRUE` にセットします（Gateway に利用可能な Intent を申告するようになります）。
 
 ### 現在のステージ情報を得る
 キーワードに反応します
@@ -71,7 +71,14 @@ Discord サーバにボットを参加させたのち、ボットに以下のよ
 @ikabot3 次のエリア
 ```
 
+現時点で下記は動作しません：
+```
+@ikabot3 ガチヤグラ // ルール名のみ (チャレンジかオープンを指定してください)
+@ikabot3 0 時のナワバリ // AM 12:00 時点のスケジュール情報 (0 は無視されます)
+```
+
 ## TODO
+- Support slash commands
 - Remove many debug codes
 - Migrate to logger from printf
 - Unit Test
