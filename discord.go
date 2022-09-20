@@ -133,5 +133,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, err = s.ChannelMessageSendReply(m.ChannelID, "Not Found!", m.Reference())
 		}
 	}
-	fmt.Println(err)
+	if err != nil {
+		logger.Sugar().Error(err)
+	}
 }

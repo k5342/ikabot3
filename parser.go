@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -83,7 +82,7 @@ func Parse(input string) *SearchQuery {
 	*/
 	regex := regexp.MustCompile(`(((次の|前の)*)((\d{0,2}) ?時の)?(ナワバリ(バトル)?|(ガチマッチ|ガチマ|ガチ|リグマ|バカマ|(リーグ|バンカラ|オープン|チャレンジ)(マッチ)?)?(ガチ)?(エリア|ホコ|ホコバトル|ヤグラ|アサリ)?) ?(\d{0,2}))$`)
 	fss := regex.FindStringSubmatch(input)
-	fmt.Printf("%#v\n", fss)
+	logger.Sugar().Infof("keyword input: %#v", fss)
 	var timeIndex string
 	if fss[5] != "" {
 		timeIndex = fss[5]

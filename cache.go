@@ -43,7 +43,7 @@ func tryRestoreCache(workdir string, cacheFilename string) (*FileCacheBody, erro
 func NewFileCache(workdir string, cacheName string) *FileCache {
 	fcBody, err := tryRestoreCache(workdir, cacheName)
 	if err != nil {
-		fmt.Println(err.Error())
+		logger.Sugar().Error(err.Error())
 		fcBody = &FileCacheBody{}
 	}
 	return &FileCache{
