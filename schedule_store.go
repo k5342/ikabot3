@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -50,7 +49,7 @@ type SearchResult struct {
 
 func lookupByAbsoluteTime(tsinfos []TimeSlotInfo, hour int) (matched *TimeSlotInfo, found bool) {
 	for _, tsinfo := range tsinfos {
-		fmt.Printf("found => %d; req => %d\n", tsinfo.StartTime.Hour(), hour)
+		logger.Sugar().Infof("found => %d; req => %d\n", tsinfo.StartTime.Hour(), hour)
 		if tsinfo.StartTime.Hour() == hour {
 			return &tsinfo, true
 		}
@@ -77,7 +76,7 @@ func (ss *ScheduleStore) Search(query *SearchQuery) SearchResult {
 }
 
 func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) SearchResult {
-	fmt.Printf("%#v\n", *query)
+	logger.Sugar().Infof("search request: %#v", *query)
 	var target []TimeSlotInfo
 	if query.Mode == "REGULAR" {
 		target = info.Regular
@@ -141,7 +140,7 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 			absoluteStartTime = (timeIdx - ((timeIdx + 1) % 2)) % 24
 		}
 	}
-	fmt.Println(absoluteStartTime)
+	logger.Sugar().Debugf("absolute start time: %d", absoluteStartTime)
 
 	if query.Mode == "BANKARA" {
 		// search case #2: lookup both by time
