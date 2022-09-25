@@ -50,7 +50,7 @@ type SearchResult struct {
 func lookupByAbsoluteTime(tsinfos []TimeSlotInfo, hour int) (matched *TimeSlotInfo, found bool) {
 	for _, tsinfo := range tsinfos {
 		logger.Sugar().Infof("found => %d; req => %d\n", tsinfo.StartTime.Hour(), hour)
-		if tsinfo.StartTime.Hour() == hour {
+		if tsinfo.StartTime.Hour() == hour && !tsinfo.IsFest {
 			return &tsinfo, true
 		}
 	}
@@ -59,7 +59,7 @@ func lookupByAbsoluteTime(tsinfos []TimeSlotInfo, hour int) (matched *TimeSlotIn
 
 func lookupByRule(tsinfos []TimeSlotInfo, ruleKey string, skipCount int) (matched *TimeSlotInfo, found bool) {
 	for _, tsinfo := range tsinfos {
-		if tsinfo.Rule.Key == ruleKey {
+		if tsinfo.Rule.Key == ruleKey && !tsinfo.IsFest {
 			if skipCount <= 0 {
 				return &tsinfo, true
 			}

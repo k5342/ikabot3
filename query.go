@@ -24,6 +24,7 @@ type TimeSlotInfo struct {
 	EndTime   time.Time   `json:"end_time"`
 	Rule      RuleInfo    `json:"rule"`
 	Stages    []StageInfo `json:"stages"`
+	IsFest    bool        `json:"is_fest"`
 }
 
 type RuleInfo struct {
