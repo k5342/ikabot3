@@ -48,7 +48,14 @@ func printAsReadableName(mode string) string {
 	if mode == "OPEN" {
 		return "バンカラマッチ（オープン）"
 	}
+	if mode == "SALMON" {
+		return "サーモンラン"
+	}
 	return ""
+}
+
+func printWeaponsList(weapons []WeaponInfo) string {
+	return fmt.Sprintf("%s\n%s\n%s\n%s", weapons[0].Name, weapons[1].Name, weapons[2].Name, weapons[3].Name)
 }
 
 func createMessageEmbedFromTimeSlotInfo(tsi *TimeSlotInfo, modeLabel string) *discordgo.MessageEmbed {
@@ -60,15 +67,28 @@ func createMessageEmbedFromTimeSlotInfo(tsi *TimeSlotInfo, modeLabel string) *di
 			Description: "Not Found!",
 		}
 	} else {
-		return &discordgo.MessageEmbed{
-			Title: tsi.Rule.Name,
-			Author: &discordgo.MessageEmbedAuthor{
-				Name: printAsReadableName(modeLabel),
-			},
-			Description: fmt.Sprintf("%d/%d %d時～%d/%d %d時\n\n%s\n%s",
-				tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
-				tsi.EndTime.Month(), tsi.EndTime.Day(), tsi.EndTime.Hour(),
-				tsi.Stages[0].Name, tsi.Stages[1].Name),
+		if modeLabel == "SALMON" {
+			return &discordgo.MessageEmbed{
+				Title: tsi.Stage.Name,
+				Author: &discordgo.MessageEmbedAuthor{
+					Name: printAsReadableName(modeLabel),
+				},
+				Description: fmt.Sprintf("%d/%d %d時～%d/%d %d時\n\n%s",
+					tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
+					tsi.EndTime.Month(), tsi.EndTime.Day(), tsi.EndTime.Hour(),
+					printWeaponsList(tsi.Weapons)),
+			}
+		} else {
+			return &discordgo.MessageEmbed{
+				Title: tsi.Rule.Name,
+				Author: &discordgo.MessageEmbedAuthor{
+					Name: printAsReadableName(modeLabel),
+				},
+				Description: fmt.Sprintf("%d/%d %d時～%d/%d %d時\n\n%s\n%s",
+					tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
+					tsi.EndTime.Month(), tsi.EndTime.Day(), tsi.EndTime.Hour(),
+					tsi.Stages[0].Name, tsi.Stages[1].Name),
+			}
 		}
 	}
 }

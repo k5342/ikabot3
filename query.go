@@ -25,6 +25,9 @@ type TimeSlotInfo struct {
 	Rule      RuleInfo    `json:"rule"`
 	Stages    []StageInfo `json:"stages"`
 	IsFest    bool        `json:"is_fest"`
+	// Salmon Run
+	Stage   StageInfo    `json:"stage"`
+	Weapons []WeaponInfo `json:"weapons"`
 }
 
 type RuleInfo struct {
@@ -33,12 +36,21 @@ type RuleInfo struct {
 }
 
 type StageInfo struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	ID    int64  `json:"id"`
+	Name  string `json:"name"`
+	Image string `json:"image,omitempty"`
 }
 
-func fetchAll() (*AllAPIResult, error) {
-	url := os.Getenv("IKABOT3_API_SOURCE")
+type SalmonAPIResult struct {
+	Results []TimeSlotInfo `json:"results"`
+}
+
+type WeaponInfo struct {
+	Name  string `json:"name"`
+	Image string `json:"image"`
+}
+
+func query(url string) ([]byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -51,7 +63,12 @@ func fetchAll() (*AllAPIResult, error) {
 		return nil, err
 	}
 
-	bytes, err := io.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
+}
+
+func fetchAll() (*AllAPIResult, error) {
+	url := os.Getenv("IKABOT3_API_SOURCE")
+	bytes, err := query(url)
 	if err != nil {
 		return nil, err
 	}
@@ -71,4 +88,28 @@ func FetchScheduleInfo() (*AllScheduleInfo, error) {
 		return nil, err
 	}
 	return &result.Result, nil
+}
+
+func fetchSalmon() (*SalmonAPIResult, error) {
+	url := os.Getenv("IKABOT3_API_SOURCE_SALMON")
+	bytes, err := query(url)
+	if err != nil {
+		return nil, err
+	}
+
+	var ar SalmonAPIResult
+	err = json.Unmarshal(bytes, &ar)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ar, nil
+}
+
+func FetchScheduleInfoSalmon() (*[]TimeSlotInfo, error) {
+	result, err := fetchSalmon()
+	if err != nil {
+		return nil, err
+	}
+	return &result.Results, nil
 }

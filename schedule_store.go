@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -8,35 +10,94 @@ import (
 
 type ScheduleStore struct {
 	sync.RWMutex
-	info  *AllScheduleInfo
-	cache *FileCache
+	info        *AllScheduleInfo
+	salmonInfo  *[]TimeSlotInfo
+	cache       *FileCache
+	salmonCache *FileCache
 }
 
 func NewScheduleStore() ScheduleStore {
 	return ScheduleStore{
-		cache: NewFileCache("./", "api_call_cache"),
+		cache:       NewFileCache("./", "api_call_cache"),
+		salmonCache: NewFileCache("./", "api_call_cache_salmon"),
 	}
 }
 
-func (ss *ScheduleStore) MaybeRefresh() {
+func (ss *ScheduleStore) maybeLoadInfo() {
 	ss.Lock()
 	defer ss.Unlock()
 	cached := ss.cache.MaybeGet(time.Minute * 30)
 	if cached == nil {
 		// outdated. refresh schedule info
-		logger.Sugar().Info("Cache is outdated. fetching...")
+		logger.Sugar().Infof("Cache %s is outdated. fetching...", ss.cache.CacheFileName)
 		info, err := FetchScheduleInfo()
 		if err == nil {
-			logger.Sugar().Info("fetch completed")
+			logger.Sugar().Infof("Fetch %s completed", ss.cache.CacheFileName)
 		} else {
-			logger.Sugar().Errorw("Fetch failed", err)
+			logger.Sugar().Errorf("Fetch %s failed: %#v", ss.cache.CacheFileName, err)
 		}
 		ss.cache.Put(info)
 		ss.info = info
 	} else {
-		logger.Sugar().Info("Cache is valid")
-		ss.info = cached
+		logger.Sugar().Infof("Cache %s is valid", ss.cache.CacheFileName)
+		c, ok := cached.(*AllScheduleInfo)
+		if ok {
+			ss.info = c
+		} else {
+			// XXX: convert map[string]interface{} to struct by re-decoding json
+			var asi AllScheduleInfo
+			bytes, err := json.Marshal(cached)
+			if err != nil {
+				logger.Sugar().Errorw("Error while preparing loading from cache", err)
+			}
+			err = json.Unmarshal(bytes, &asi)
+			if err != nil {
+				logger.Sugar().Errorw("Error while loading from cache", err)
+			}
+			ss.info = &asi
+		}
 	}
+}
+
+func (ss *ScheduleStore) maybeLoadInfoSalmon() {
+	ss.Lock()
+	defer ss.Unlock()
+	cached := ss.salmonCache.MaybeGet(time.Minute * 30)
+	if cached == nil {
+		// outdated. refresh schedule info
+		logger.Sugar().Infof("Cache %s is outdated. fetching...", ss.salmonCache.CacheFileName)
+		info, err := FetchScheduleInfoSalmon()
+		if err == nil {
+			logger.Sugar().Infof("Fetch %s completed", ss.salmonCache.CacheFileName)
+		} else {
+			logger.Sugar().Errorf("Fetch %s failed: %#v", ss.salmonCache.CacheFileName, err)
+		}
+		ss.salmonCache.Put(info)
+		ss.salmonInfo = info
+	} else {
+		logger.Sugar().Infof("Cache %s is valid", ss.salmonCache.CacheFileName)
+		c, ok := cached.(*[]TimeSlotInfo)
+		if ok {
+			ss.salmonInfo = c
+		} else {
+			// XXX: convert map[string]interface{} to struct by re-decoding json
+			var tsi []TimeSlotInfo
+			bytes, err := json.Marshal(cached)
+			if err != nil {
+				logger.Sugar().Errorw("Error while preparing loading from cache", err)
+			}
+			err = json.Unmarshal(bytes, &tsi)
+			if err != nil {
+				logger.Sugar().Errorw("Error while loading from cache", err)
+			}
+			ss.salmonInfo = &tsi
+		}
+	}
+}
+
+func (ss *ScheduleStore) MaybeRefresh() {
+	ss.maybeLoadInfo()
+	ss.maybeLoadInfoSalmon()
 }
 
 type SearchResult struct {
@@ -48,6 +109,7 @@ type SearchResult struct {
 }
 
 func lookupByAbsoluteTime(tsinfos []TimeSlotInfo, hour int) (matched *TimeSlotInfo, found bool) {
+	fmt.Printf("%#v", tsinfos)
 	for _, tsinfo := range tsinfos {
 		logger.Sugar().Infof("found => %d; req => %d\n", tsinfo.StartTime.Hour(), hour)
 		if tsinfo.StartTime.Hour() == hour && !tsinfo.IsFest {
@@ -72,7 +134,24 @@ func lookupByRule(tsinfos []TimeSlotInfo, ruleKey string, skipCount int) (matche
 func (ss *ScheduleStore) Search(query *SearchQuery) SearchResult {
 	ss.RLock()
 	defer ss.RUnlock()
-	return search(query, ss.info, time.Now())
+	if query.Mode == "SALMON" {
+		return searchSalmon(query, ss.salmonInfo, time.Now())
+	} else {
+		return search(query, ss.info, time.Now())
+	}
+}
+
+func searchSalmon(query *SearchQuery, salmonInfo *[]TimeSlotInfo, timeStamp time.Time) SearchResult {
+	relativeIdx, err := strconv.Atoi(query.RelativeIndex)
+	if err != nil {
+		relativeIdx = 0
+	}
+	return SearchResult{
+		Query:      query,
+		Found:      relativeIdx < 5,
+		IsTwoSlots: false,
+		Slot1:      &(*salmonInfo)[relativeIdx],
+	}
 }
 
 func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) SearchResult {
