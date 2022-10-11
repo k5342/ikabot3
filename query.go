@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 )
@@ -66,9 +67,12 @@ func query(url string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
+func getSource() string {
+	return os.Getenv("IKABOT3_API_SOURCE")
+}
+
 func fetchAll() (*AllAPIResult, error) {
-	url := os.Getenv("IKABOT3_API_SOURCE")
-	bytes, err := query(url)
+	bytes, err := query(getSource())
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +95,10 @@ func FetchScheduleInfo() (*AllScheduleInfo, error) {
 }
 
 func fetchSalmon() (*SalmonAPIResult, error) {
-	url := os.Getenv("IKABOT3_API_SOURCE_SALMON")
+	url, err := url.JoinPath(getSource(), "..", "coop-grouping-regular/schedule")
+	if err != nil {
+		return nil, err
+	}
 	bytes, err := query(url)
 	if err != nil {
 		return nil, err
