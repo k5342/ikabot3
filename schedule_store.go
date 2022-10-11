@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -78,7 +77,6 @@ type SearchResult struct {
 }
 
 func lookupByAbsoluteTime(tsinfos []TimeSlotInfo, hour int) (matched *TimeSlotInfo, found bool) {
-	fmt.Printf("%#v", tsinfos)
 	for _, tsinfo := range tsinfos {
 		logger.Sugar().Infof("found => %d; req => %d\n", tsinfo.StartTime.Hour(), hour)
 		if tsinfo.StartTime.Hour() == hour && !tsinfo.IsFest {
