@@ -146,11 +146,18 @@ func searchSalmon(query *SearchQuery, salmonInfo *[]TimeSlotInfo, timeStamp time
 	if err != nil {
 		relativeIdx = 0
 	}
+	found := relativeIdx < len(*salmonInfo)
+	var result *TimeSlotInfo
+	if found {
+		result = &(*salmonInfo)[relativeIdx]
+	} else {
+		result = nil
+	}
 	return SearchResult{
 		Query:      query,
-		Found:      relativeIdx < 5,
+		Found:      found,
 		IsTwoSlots: false,
-		Slot1:      &(*salmonInfo)[relativeIdx],
+		Slot1:      result,
 	}
 }
 
