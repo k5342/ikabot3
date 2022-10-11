@@ -66,29 +66,28 @@ func createMessageEmbedFromTimeSlotInfo(tsi *TimeSlotInfo, modeLabel string) *di
 			},
 			Description: "Not Found!",
 		}
+	}
+	if modeLabel == "SALMON" {
+		return &discordgo.MessageEmbed{
+			Title: tsi.Stage.Name,
+			Author: &discordgo.MessageEmbedAuthor{
+				Name: printAsReadableName(modeLabel),
+			},
+			Description: fmt.Sprintf("%d/%d %d時～%d/%d %d時\n\n%s",
+				tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
+				tsi.EndTime.Month(), tsi.EndTime.Day(), tsi.EndTime.Hour(),
+				printWeaponsList(tsi.Weapons)),
+		}
 	} else {
-		if modeLabel == "SALMON" {
-			return &discordgo.MessageEmbed{
-				Title: tsi.Stage.Name,
-				Author: &discordgo.MessageEmbedAuthor{
-					Name: printAsReadableName(modeLabel),
-				},
-				Description: fmt.Sprintf("%d/%d %d時～%d/%d %d時\n\n%s",
-					tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
-					tsi.EndTime.Month(), tsi.EndTime.Day(), tsi.EndTime.Hour(),
-					printWeaponsList(tsi.Weapons)),
-			}
-		} else {
-			return &discordgo.MessageEmbed{
-				Title: tsi.Rule.Name,
-				Author: &discordgo.MessageEmbedAuthor{
-					Name: printAsReadableName(modeLabel),
-				},
-				Description: fmt.Sprintf("%d/%d %d時～%d/%d %d時\n\n%s\n%s",
-					tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
-					tsi.EndTime.Month(), tsi.EndTime.Day(), tsi.EndTime.Hour(),
-					tsi.Stages[0].Name, tsi.Stages[1].Name),
-			}
+		return &discordgo.MessageEmbed{
+			Title: tsi.Rule.Name,
+			Author: &discordgo.MessageEmbedAuthor{
+				Name: printAsReadableName(modeLabel),
+			},
+			Description: fmt.Sprintf("%d/%d %d時～%d/%d %d時\n\n%s\n%s",
+				tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
+				tsi.EndTime.Month(), tsi.EndTime.Day(), tsi.EndTime.Hour(),
+				tsi.Stages[0].Name, tsi.Stages[1].Name),
 		}
 	}
 }
