@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"sync"
@@ -26,7 +25,7 @@ func NewScheduleStore() ScheduleStore {
 func (ss *ScheduleStore) maybeLoadInfo() {
 	ss.Lock()
 	defer ss.Unlock()
-	cached := ss.cache.MaybeGet(time.Minute * 30)
+	cached := MaybeGetFromFileCache[AllScheduleInfo](ss.cache, time.Minute*30)
 	if cached == nil {
 		// outdated. refresh schedule info
 		logger.Sugar().Infof("Cache %s is outdated. fetching...", ss.cache.CacheFileName)
@@ -40,29 +39,14 @@ func (ss *ScheduleStore) maybeLoadInfo() {
 		ss.info = info
 	} else {
 		logger.Sugar().Infof("Cache %s is valid", ss.cache.CacheFileName)
-		c, ok := cached.(*AllScheduleInfo)
-		if ok {
-			ss.info = c
-		} else {
-			// XXX: convert map[string]interface{} to struct by re-decoding json
-			var asi AllScheduleInfo
-			bytes, err := json.Marshal(cached)
-			if err != nil {
-				logger.Sugar().Errorw("Error while preparing loading from cache", err)
-			}
-			err = json.Unmarshal(bytes, &asi)
-			if err != nil {
-				logger.Sugar().Errorw("Error while loading from cache", err)
-			}
-			ss.info = &asi
-		}
+		ss.info = cached
 	}
 }
 
 func (ss *ScheduleStore) maybeLoadInfoSalmon() {
 	ss.Lock()
 	defer ss.Unlock()
-	cached := ss.salmonCache.MaybeGet(time.Minute * 30)
+	cached := MaybeGetFromFileCache[[]TimeSlotInfo](ss.salmonCache, time.Minute*30)
 	if cached == nil {
 		// outdated. refresh schedule info
 		logger.Sugar().Infof("Cache %s is outdated. fetching...", ss.salmonCache.CacheFileName)
@@ -76,22 +60,7 @@ func (ss *ScheduleStore) maybeLoadInfoSalmon() {
 		ss.salmonInfo = info
 	} else {
 		logger.Sugar().Infof("Cache %s is valid", ss.salmonCache.CacheFileName)
-		c, ok := cached.(*[]TimeSlotInfo)
-		if ok {
-			ss.salmonInfo = c
-		} else {
-			// XXX: convert map[string]interface{} to struct by re-decoding json
-			var tsi []TimeSlotInfo
-			bytes, err := json.Marshal(cached)
-			if err != nil {
-				logger.Sugar().Errorw("Error while preparing loading from cache", err)
-			}
-			err = json.Unmarshal(bytes, &tsi)
-			if err != nil {
-				logger.Sugar().Errorw("Error while loading from cache", err)
-			}
-			ss.salmonInfo = &tsi
-		}
+		ss.salmonInfo = cached
 	}
 }
 

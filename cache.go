@@ -94,6 +94,15 @@ func (fc *FileCache) MaybeGet(ttl time.Duration) interface{} {
 	}
 }
 
+// XXX: to support generics
+func MaybeGetFromFileCache[T any](fc *FileCache, ttl time.Duration) *T {
+	if result := fc.MaybeGet(ttl); result == nil {
+		return nil
+	} else {
+		return result.(*T)
+	}
+}
+
 func (fc *FileCache) IsExpired(ttl time.Duration) bool {
 	fc.RWMutex.RLock()
 	defer fc.RWMutex.RUnlock()
