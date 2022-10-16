@@ -6,7 +6,7 @@ go.sum:
 	go mod tidy
 
 build: go.sum
-	go build *.go
+	go build -o ikabot3
 
 test: go.sum
 	go test
