@@ -1,9 +1,12 @@
 .PHONY: build test clean
 
-build:
+go.sum:
+	go mod tidy
+
+build: go.sum
 	go build *.go
 
-test:
+test: go.sum
 	go test
 
 clean:
