@@ -8,35 +8,64 @@ import (
 
 type ScheduleStore struct {
 	sync.RWMutex
-	info  *AllScheduleInfo
-	cache *FileCache
+	info        *AllScheduleInfo
+	salmonInfo  *[]TimeSlotInfo
+	cache       *FileCache
+	salmonCache *FileCache
 }
 
 func NewScheduleStore() ScheduleStore {
 	return ScheduleStore{
-		cache: NewFileCache("./", "api_call_cache"),
+		cache:       NewFileCache("./", "api_call_cache"),
+		salmonCache: NewFileCache("./", "api_call_cache_salmon"),
 	}
 }
 
-func (ss *ScheduleStore) MaybeRefresh() {
+func (ss *ScheduleStore) maybeLoadInfo() {
 	ss.Lock()
 	defer ss.Unlock()
-	cached := ss.cache.MaybeGet(time.Minute * 30)
+	cached := MaybeGetFromFileCache[AllScheduleInfo](ss.cache, time.Minute*30)
 	if cached == nil {
 		// outdated. refresh schedule info
-		logger.Sugar().Info("Cache is outdated. fetching...")
+		logger.Sugar().Infof("Cache %s is outdated. fetching...", ss.cache.CacheFileName)
 		info, err := FetchScheduleInfo()
 		if err == nil {
-			logger.Sugar().Info("fetch completed")
+			logger.Sugar().Infof("Fetch %s completed", ss.cache.CacheFileName)
 		} else {
-			logger.Sugar().Errorw("Fetch failed", err)
+			logger.Sugar().Errorf("Fetch %s failed: %#v", ss.cache.CacheFileName, err)
 		}
 		ss.cache.Put(info)
 		ss.info = info
 	} else {
-		logger.Sugar().Info("Cache is valid")
+		logger.Sugar().Infof("Cache %s is valid", ss.cache.CacheFileName)
 		ss.info = cached
 	}
+}
+
+func (ss *ScheduleStore) maybeLoadInfoSalmon() {
+	ss.Lock()
+	defer ss.Unlock()
+	cached := MaybeGetFromFileCache[[]TimeSlotInfo](ss.salmonCache, time.Minute*30)
+	if cached == nil {
+		// outdated. refresh schedule info
+		logger.Sugar().Infof("Cache %s is outdated. fetching...", ss.salmonCache.CacheFileName)
+		info, err := FetchScheduleInfoSalmon()
+		if err == nil {
+			logger.Sugar().Infof("Fetch %s completed", ss.salmonCache.CacheFileName)
+		} else {
+			logger.Sugar().Errorf("Fetch %s failed: %#v", ss.salmonCache.CacheFileName, err)
+		}
+		ss.salmonCache.Put(info)
+		ss.salmonInfo = info
+	} else {
+		logger.Sugar().Infof("Cache %s is valid", ss.salmonCache.CacheFileName)
+		ss.salmonInfo = cached
+	}
+}
+
+func (ss *ScheduleStore) MaybeRefresh() {
+	ss.maybeLoadInfo()
+	ss.maybeLoadInfoSalmon()
 }
 
 type SearchResult struct {
@@ -72,7 +101,31 @@ func lookupByRule(tsinfos []TimeSlotInfo, ruleKey string, skipCount int) (matche
 func (ss *ScheduleStore) Search(query *SearchQuery) SearchResult {
 	ss.RLock()
 	defer ss.RUnlock()
-	return search(query, ss.info, time.Now())
+	if query.Mode == "SALMON" {
+		return searchSalmon(query, ss.salmonInfo, time.Now())
+	} else {
+		return search(query, ss.info, time.Now())
+	}
+}
+
+func searchSalmon(query *SearchQuery, salmonInfo *[]TimeSlotInfo, timeStamp time.Time) SearchResult {
+	relativeIdx, err := strconv.Atoi(query.RelativeIndex)
+	if err != nil {
+		relativeIdx = 0
+	}
+	found := relativeIdx < len(*salmonInfo)
+	var result *TimeSlotInfo
+	if found {
+		result = &(*salmonInfo)[relativeIdx]
+	} else {
+		result = nil
+	}
+	return SearchResult{
+		Query:      query,
+		Found:      found,
+		IsTwoSlots: false,
+		Slot1:      result,
+	}
 }
 
 func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) SearchResult {

@@ -13,7 +13,7 @@ import (
 
 type FileCacheBody struct {
 	Updated time.Time
-	Body    *AllScheduleInfo
+	Body    interface{}
 }
 
 type FileCache struct {
@@ -53,7 +53,7 @@ func NewFileCache(workdir string, cacheName string) *FileCache {
 	}
 }
 
-func (fc *FileCache) Put(data *AllScheduleInfo) (persistent bool, err error) {
+func (fc *FileCache) Put(data interface{}) (persistent bool, err error) {
 	fc.RWMutex.Lock()
 	defer fc.RWMutex.Unlock()
 
@@ -78,19 +78,28 @@ func (fc *FileCache) Put(data *AllScheduleInfo) (persistent bool, err error) {
 	return true, nil
 }
 
-func (fc *FileCache) Get() *AllScheduleInfo {
+func (fc *FileCache) Get() interface{} {
 	fc.RWMutex.RLock()
 	defer fc.RWMutex.RUnlock()
 	return fc.FileCacheBody.Body
 }
 
-func (fc *FileCache) MaybeGet(ttl time.Duration) *AllScheduleInfo {
+func (fc *FileCache) MaybeGet(ttl time.Duration) interface{} {
 	fc.RWMutex.RLock()
 	defer fc.RWMutex.RUnlock()
 	if fc.IsExpired(ttl) {
 		return nil
 	} else {
 		return fc.Get()
+	}
+}
+
+// XXX: to support generics
+func MaybeGetFromFileCache[T any](fc *FileCache, ttl time.Duration) *T {
+	if result := fc.MaybeGet(ttl); result == nil {
+		return nil
+	} else {
+		return result.(*T)
 	}
 }
 
