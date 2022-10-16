@@ -4,14 +4,16 @@
 こちらのボットの API はえむおん氏制作の [Spla3 API](https://spla3.yuu26.com/) を情報取得に利用しています。コマンド体系は Project-Cube 様制作の[イカボット](https://cube-library.net/works/co-production-works/splatoon2-bot-discord/)の書式を参考にしています。
 
 ## ボット起動方法
-.env に Discord Token と [Spla3 API](https://spla3.yuu26.com/) の注意事項をよく読んだ上で `現在以降の全ステージ情報` への URL を記述してください。ボットは以下で起動します。
+.env に Discord Token と [Spla3 API](https://spla3.yuu26.com/) の注意事項をよく読んだ上で `全ステージ情報をまとめて取得` への URL を記述してください。ボットは以下で起動します。
 ```
 % cp .env{.example,}
-% go run *.go
+% $EDITOR .env # IKABOT3_TOKEN と IKABOT3_API_SOURCE を埋める
+% make build   # ikabot3 バイナリをビルド
+% ./ikabot3
 ```
 
 ## コマンドの使い方
-Discord サーバにボットを参加させたのち、ボットに以下のようにメンションすると対応するステージ情報を返却します。
+Discord サーバにボットを参加させたのち、ボットに以下のようにメンションすると対応するステージ情報を返却します。スラッシュコマンドは今後対応予定。
 ```
 @ikabot3 オープンマッチ
 ```
@@ -82,6 +84,4 @@ Discord サーバにボットを参加させたのち、ボットに以下のよ
 
 ## TODO
 - Support slash commands
-- Remove many debug codes
-- Migrate to logger from printf
-- Unit Test
+- More Unit Tests
