@@ -1,5 +1,7 @@
 .PHONY: build test clean
 
+.DEFAULT_GOAL := build
+
 go.sum:
 	go mod tidy
 
