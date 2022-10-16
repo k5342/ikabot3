@@ -162,6 +162,15 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 				Slot1:      matched1,
 				Slot2:      matched2,
 			}
+		} else if query.Rule == "TURF_WAR" {
+			// TODO: support Splatfest schedule search
+			matched, found := lookupByRule(info.Regular, query.Rule, skipCount)
+			return SearchResult{
+				Query:      query,
+				Found:      found,
+				IsTwoSlots: false,
+				Slot1:      matched,
+			}
 		} else {
 			matched, found := lookupByRule(target, query.Rule, skipCount)
 			return SearchResult{

@@ -135,12 +135,16 @@ func Test_searchModeIdentifier(t *testing.T) {
 			args: "リグマ",
 			want: "OPEN",
 		},
-		// FIXME: This keyword should be supported as well
-		// {
-		// 	name: "リーグマッチ must be proceed as OPEN",
-		// 	args: "リーグマッチ",
-		// 	want: "OPEN",
-		// },
+		{
+			name: "リーグマッチ must be proceed as OPEN",
+			args: "リーグマッチ",
+			want: "OPEN",
+		},
+		{
+			name: "リーグ must be proceed as OPEN",
+			args: "リーグ",
+			want: "OPEN",
+		},
 		{
 			name: "オープン must be proceed as OPEN",
 			args: "オープン",
@@ -152,16 +156,25 @@ func Test_searchModeIdentifier(t *testing.T) {
 			want: "OPEN",
 		},
 		{
-			name: "ナワバリ must be proceed as REGULAR",
+			name: "ナワバリ must be proceed as ''",
 			args: "ナワバリ",
+			want: "",
+		},
+		{
+			name: "ナワバリバトル must be proceed as ''",
+			args: "ナワバリバトル",
+			want: "",
+		},
+		{
+			name: "レギュラーマッチ must be proceed as REGULAR",
+			args: "レギュラーマッチ",
 			want: "REGULAR",
 		},
-		// FIXME: currently we does not support this keyword
-		// {
-		// 	name: "レギュラーマッチ must be proceed as REGULAR",
-		// 	args: "レギュラーマッチ",
-		// 	want: "REGULAR",
-		// },
+		{
+			name: "レギュラー must be proceed as REGULAR",
+			args: "レギュラー",
+			want: "REGULAR",
+		},
 		{
 			name: "バンカラマッチ must be proceed as BANKARA",
 			args: "バンカラマッチ",
@@ -327,8 +340,8 @@ func TestParse(t *testing.T) {
 				OriginalText:  "次のナワバリバトル",
 				RelativeIndex: "1",
 				TimeIndex:     "",
-				Mode:          "REGULAR",
-				Rule:          "", // FIXME: ナワバリバトル should be considered as rule.
+				Mode:          "",
+				Rule:          "TURF_WAR",
 			},
 		},
 		{
@@ -416,6 +429,28 @@ func TestParse(t *testing.T) {
 				RelativeIndex: "1",
 				TimeIndex:     "",
 				Mode:          "SALMON",
+				Rule:          "",
+			},
+		},
+		{
+			name: "ナワバリバトル",
+			args: "ナワバリバトル",
+			want: &SearchQuery{
+				OriginalText:  "ナワバリバトル",
+				RelativeIndex: "",
+				TimeIndex:     "",
+				Mode:          "",
+				Rule:          "TURF_WAR",
+			},
+		},
+		{
+			name: "次のレギュラーマッチ",
+			args: "次のレギュラーマッチ",
+			want: &SearchQuery{
+				OriginalText:  "次のレギュラーマッチ",
+				RelativeIndex: "1",
+				TimeIndex:     "",
+				Mode:          "REGULAR",
 				Rule:          "",
 			},
 		},
