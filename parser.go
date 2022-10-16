@@ -34,10 +34,10 @@ func searchModeIdentifier(input string) string {
 	if strings.HasPrefix(input, "ガチマ") || strings.HasPrefix(input, "チャレンジ") {
 		return "CHALLENGE"
 	}
-	if strings.HasPrefix(input, "リグマ") || strings.HasPrefix(input, "オープン") {
+	if strings.HasPrefix(input, "リグマ") || strings.HasPrefix(input, "オープン") || strings.HasPrefix(input, "リーグ") {
 		return "OPEN"
 	}
-	if strings.HasPrefix(input, "ナワバリ") {
+	if strings.HasPrefix(input, "レギュラー") {
 		return "REGULAR"
 	}
 	if strings.HasPrefix(input, "バカマ") || strings.HasPrefix(input, "バンカラ") {
@@ -46,6 +46,10 @@ func searchModeIdentifier(input string) string {
 	}
 	if strings.HasPrefix(input, "サーモン") || strings.HasPrefix(input, "シャケ") || strings.HasPrefix(input, "鮭") {
 		return "SALMON"
+	}
+	if strings.HasPrefix(input, "ナワバリ") {
+		// possible both regular or Splatfest
+		return ""
 	}
 	if isRuleName(input) {
 		return "BANKARA"
@@ -66,6 +70,9 @@ func searchRuleIdentifier(input string) string {
 	if strings.HasPrefix(input, "アサリ") {
 		return "CLAM"
 	}
+	if strings.HasPrefix(input, "ナワバリ") {
+		return "TURF_WAR"
+	}
 	return ""
 }
 
@@ -83,14 +90,14 @@ func Parse(input string) *SearchQuery {
 	   ガチマ 20
 	   次のエリア
 	*/
-	regex := regexp.MustCompile(`(((次の|前の)*)((\d{0,2}) ?時の)?(ナワバリ(バトル)?|(ガチマッチ|ガチマ|ガチ|リグマ|バカマ|(リーグ|バンカラ|オープン|チャレンジ)(マッチ)?)?(ガチ)?(エリア|ホコ|ホコバトル|ヤグラ|アサリ)?|シャケ|サーモン|サーモンラン|鮭) ?(\d{0,2}))$`)
+	regex := regexp.MustCompile(`(((次の|前の)*)((\d{0,2}) ?時の)?((ガチマッチ|ガチマ|ガチ|リグマ|バカマ|(レギュラー|リーグ|バンカラ|オープン|チャレンジ)(マッチ)?)?(ガチ)?(ナワバリ|ナワバリバトル|エリア|ホコ|ホコバトル|ヤグラ|アサリ)?|シャケ|サーモン|サーモンラン|鮭) ?(\d{0,2}))$`)
 	fss := regex.FindStringSubmatch(input)
 	logger.Sugar().Infof("keyword input: %#v", fss)
 	var timeIndex string
 	if fss[5] != "" {
 		timeIndex = fss[5]
-	} else if fss[13] != "" {
-		timeIndex = fss[13]
+	} else if fss[12] != "" {
+		timeIndex = fss[12]
 	} else {
 		timeIndex = ""
 	}
@@ -105,6 +112,6 @@ func Parse(input string) *SearchQuery {
 		RelativeIndex: rindex,
 		TimeIndex:     timeIndex,
 		Mode:          searchModeIdentifier(fss[6]),
-		Rule:          searchRuleIdentifier(fss[12]),
+		Rule:          searchRuleIdentifier(fss[11]),
 	}
 }
