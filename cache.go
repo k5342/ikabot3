@@ -99,7 +99,20 @@ func MaybeGetFromFileCache[T any](fc *FileCache, ttl time.Duration) *T {
 	if result := fc.MaybeGet(ttl); result == nil {
 		return nil
 	} else {
-		return result.(*T)
+		switch result.(type) {
+		case []interface{}:
+			var obj T
+			txt, _ := json.Marshal(result)
+			json.Unmarshal(txt, &obj)
+			return &obj
+		case map[string]interface{}:
+			var obj T
+			txt, _ := json.Marshal(result)
+			json.Unmarshal(txt, &obj)
+			return &obj
+		default:
+			return result.(*T)
+		}
 	}
 }
 
