@@ -273,7 +273,7 @@ func interactionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if commandName == "rule" {
 		opts := i.ApplicationCommandData().Options
 		if len(opts) > 0 {
-			query = &SearchQuery{Rule: opts[0].Value.(string)}
+			query = &SearchQuery{Mode: "BANKARA", Rule: opts[0].Value.(string)}
 		}
 	}
 
