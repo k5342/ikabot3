@@ -11,6 +11,7 @@ import (
 type DiscordBot struct {
 	Session                   *discordgo.Session
 	AllowMessageContentIntent bool
+	registeredCommands        []*discordgo.ApplicationCommand
 }
 
 func LaunchDiscordBot(botToken string, allowMessageContentIntent bool) (*DiscordBot, error) {
@@ -19,6 +20,7 @@ func LaunchDiscordBot(botToken string, allowMessageContentIntent bool) (*Discord
 		return nil, err
 	}
 	dg.AddHandler(messageCreate)
+	dg.AddHandler(interactionCreate)
 	dg.Identify.Intents |= discordgo.IntentsGuildMessages
 	if allowMessageContentIntent {
 		dg.Identify.Intents |= discordgo.IntentMessageContent
@@ -28,14 +30,109 @@ func LaunchDiscordBot(botToken string, allowMessageContentIntent bool) (*Discord
 		return nil, err
 	}
 
-	return &DiscordBot{
+	bot := DiscordBot{
 		Session:                   dg,
 		AllowMessageContentIntent: allowMessageContentIntent,
-	}, nil
+	}
+	bot.setupSlashCommands()
+
+	return &bot, nil
 }
 
 func (bot *DiscordBot) CloseDiscordBot() {
+	for _, val := range bot.registeredCommands {
+		err := bot.Session.ApplicationCommandDelete(bot.Session.State.User.ID, "", val.ID)
+		if err == nil {
+			logger.Sugar().Infof("Deleted a command '%#v'", val.Name)
+		} else {
+			logger.Sugar().Errorf("Cannot delete command '%v': %v", val.Name, err)
+		}
+	}
 	bot.Session.Close()
+}
+
+func (bot *DiscordBot) setupSlashCommands() {
+	commands := []*discordgo.ApplicationCommand{
+		{
+			Name:        "regular",
+			Description: "Returns a schedule for regular match",
+		},
+		{
+			Name:        "bankara",
+			Description: "Returns a schedule for both Open and Challenge match",
+		},
+		{
+			Name:        "open",
+			Description: "Returns a schedule for Open match",
+		},
+		{
+			Name:        "challenge",
+			Description: "Returns a schedule for Challenge match",
+		},
+		{
+			Name:        "salmon",
+			Description: "Returns a schedule for Salmon Run",
+		},
+		{
+			Name:        "rule",
+			Description: "Search both schedules from Open and Challenge match by rule name",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Name:        "rule",
+					Description: "a rule name to search",
+					Type:        discordgo.ApplicationCommandOptionString,
+					Required:    true,
+					Choices: []*discordgo.ApplicationCommandOptionChoice{
+						{
+							Name: "turf-war",
+							NameLocalizations: map[discordgo.Locale]string{
+								discordgo.Japanese: "ナワバリバトル",
+							},
+							Value: "TURF_WAR",
+						},
+						{
+							Name: "area",
+							NameLocalizations: map[discordgo.Locale]string{
+								discordgo.Japanese: "ガチエリア",
+							},
+							Value: "AREA",
+						},
+						{
+							Name: "rainmarker",
+							NameLocalizations: map[discordgo.Locale]string{
+								discordgo.Japanese: "ガチホコバトル",
+							},
+							Value: "GOAL",
+						},
+						{
+							Name: "tower-control",
+							NameLocalizations: map[discordgo.Locale]string{
+								discordgo.Japanese: "ガチヤグラ",
+							},
+							Value: "LOFT",
+						},
+						{
+							Name: "clam-blitz",
+							NameLocalizations: map[discordgo.Locale]string{
+								discordgo.Japanese: "ガチアサリ",
+							},
+							Value: "CLAM",
+						},
+					},
+				},
+			},
+		},
+	}
+	bot.registeredCommands = make([]*discordgo.ApplicationCommand, len(commands))
+	for idx, val := range commands {
+		registered, err := bot.Session.ApplicationCommandCreate(bot.Session.State.User.ID, "", val)
+		if err == nil {
+			logger.Sugar().Infof("Created a command '%#v'", val.Name)
+		} else {
+			logger.Sugar().Errorf("Cannot create command '%#v': %#v", val.Name, err)
+		}
+		bot.registeredCommands[idx] = registered
+	}
 }
 
 func printAsReadableName(mode string) string {
@@ -151,6 +248,73 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if isMentioned(s.State.User, m.Mentions, input) {
 			_, err = s.ChannelMessageSendReply(m.ChannelID, "Not Found!", m.Reference())
 		}
+	}
+	if err != nil {
+		logger.Sugar().Error(err)
+	}
+}
+
+func interactionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	commandName2mode := map[string]string{
+		"regular":   "REGULAR",
+		"bankara":   "BANKARA",
+		"open":      "OPEN",
+		"challenge": "CHALLENGE",
+		"salmon":    "SALMON",
+	}
+	commandName := i.ApplicationCommandData().Name
+
+	var query *SearchQuery
+	modeName, found := commandName2mode[commandName]
+	if found {
+		query = &SearchQuery{Mode: modeName}
+	}
+
+	if commandName == "rule" {
+		opts := i.ApplicationCommandData().Options
+		if len(opts) > 0 {
+			query = &SearchQuery{Rule: opts[0].Value.(string)}
+		}
+	}
+
+	// check command structure is valid
+	if query == nil {
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Invalid command!",
+			},
+		})
+		if err != nil {
+			logger.Sugar().Error(err)
+		}
+	}
+	// if valid, query to schedule store
+	scheduleStore.MaybeRefresh()
+	sr := scheduleStore.Search(query)
+
+	// reply
+	var err error
+	if sr.Found {
+		var embeds []*discordgo.MessageEmbed
+		if sr.IsTwoSlots {
+			embeds = createTwoStageInfoEmbeds(sr)
+		} else {
+			embeds = append(embeds, createSingleStageInfoEmbed(sr))
+		}
+		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: embeds,
+			},
+		})
+	} else {
+		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "Not Found!",
+			},
+		})
 	}
 	if err != nil {
 		logger.Sugar().Error(err)
