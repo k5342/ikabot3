@@ -26,7 +26,9 @@ func main() {
 	}
 
 	logger, _ = zap.NewProduction()
-	defer logger.Sync()
+	defer func() {
+		_ = logger.Sync()
+	}()
 	go func() {
 		logger.Sugar().Info(http.ListenAndServe("localhost:6060", nil))
 	}()

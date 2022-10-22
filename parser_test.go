@@ -9,7 +9,9 @@ import (
 
 func init() {
 	logger, _ = zap.NewProduction()
-	defer logger.Sync()
+	defer func() {
+		_ = logger.Sync()
+	}()
 }
 
 func Test_countRelativeIdentifier(t *testing.T) {

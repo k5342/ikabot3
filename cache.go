@@ -102,13 +102,25 @@ func MaybeGetFromFileCache[T any](fc *FileCache, ttl time.Duration) *T {
 		switch result.(type) {
 		case []interface{}:
 			var obj T
-			txt, _ := json.Marshal(result)
-			json.Unmarshal(txt, &obj)
+			txt, err := json.Marshal(result)
+			if err != nil {
+				return nil
+			}
+			err = json.Unmarshal(txt, &obj)
+			if err != nil {
+				return nil
+			}
 			return &obj
 		case map[string]interface{}:
 			var obj T
-			txt, _ := json.Marshal(result)
-			json.Unmarshal(txt, &obj)
+			txt, err := json.Marshal(result)
+			if err != nil {
+				return nil
+			}
+			err = json.Unmarshal(txt, &obj)
+			if err != nil {
+				return nil
+			}
 			return &obj
 		default:
 			return result.(*T)
