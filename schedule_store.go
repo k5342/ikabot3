@@ -33,8 +33,12 @@ func (ss *ScheduleStore) maybeLoadInfo() {
 			logger.Sugar().Infof("Fetch %s completed", ss.cache.CacheFileName)
 		} else {
 			logger.Sugar().Errorf("Fetch %s failed: %#v", ss.cache.CacheFileName, err)
+			return
 		}
-		ss.cache.Put(info)
+		_, err = ss.cache.Put(info)
+		if err != nil {
+			return
+		}
 		ss.info = info
 	} else {
 		logger.Sugar().Infof("Cache %s is valid", ss.cache.CacheFileName)
@@ -55,7 +59,10 @@ func (ss *ScheduleStore) maybeLoadInfoSalmon() {
 		} else {
 			logger.Sugar().Errorf("Fetch %s failed: %#v", ss.salmonCache.CacheFileName, err)
 		}
-		ss.salmonCache.Put(info)
+		_, err = ss.salmonCache.Put(info)
+		if err != nil {
+			return
+		}
 		ss.salmonInfo = info
 	} else {
 		logger.Sugar().Infof("Cache %s is valid", ss.salmonCache.CacheFileName)
