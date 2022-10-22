@@ -2,9 +2,6 @@
 
 .DEFAULT_GOAL := build
 
-go.sum:
-	go mod tidy
-
 build: go.sum
 	go build -o ikabot3
 
