@@ -55,23 +55,23 @@ func (bot *DiscordBot) setupSlashCommands() {
 	commands := []*discordgo.ApplicationCommand{
 		{
 			Name:        "regular",
-			Description: "Returns a schedule for regular match",
+			Description: "Return a schedule for regular match",
 		},
 		{
 			Name:        "bankara",
-			Description: "Returns a schedule for both Open and Challenge match",
+			Description: "Return a schedule for both Open and Challenge match",
 		},
 		{
 			Name:        "open",
-			Description: "Returns a schedule for Open match",
+			Description: "Return a schedule for Open match",
 		},
 		{
 			Name:        "challenge",
-			Description: "Returns a schedule for Challenge match",
+			Description: "Return a schedule for Challenge match",
 		},
 		{
 			Name:        "salmon",
-			Description: "Returns a schedule for Salmon Run",
+			Description: "Return a schedule for Salmon Run",
 		},
 		{
 			Name:        "rule",
