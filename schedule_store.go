@@ -147,6 +147,9 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 	if query.Mode == "OPEN" {
 		target = info.BankaraOpen
 	}
+	if query.Mode == "X" {
+		target = info.XMatch
+	}
 
 	// search case #1: filter by rule
 	if query.Rule != "" {

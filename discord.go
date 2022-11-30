@@ -74,6 +74,10 @@ func (bot *DiscordBot) setupSlashCommands() {
 			Description: "Return a schedule for Salmon Run",
 		},
 		{
+			Name:        "x",
+			Description: "Return a schedule for X Match",
+		},
+		{
 			Name:        "rule",
 			Description: "Search both schedules from Open and Challenge match by rule name",
 			Options: []*discordgo.ApplicationCommandOption{
@@ -147,6 +151,9 @@ func printAsReadableName(mode string) string {
 	}
 	if mode == "SALMON" {
 		return "サーモンラン"
+	}
+	if mode == "X" {
+		return "Xマッチ"
 	}
 	return ""
 }
@@ -261,6 +268,7 @@ func interactionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		"open":      "OPEN",
 		"challenge": "CHALLENGE",
 		"salmon":    "SALMON",
+		"x":         "X",
 	}
 	commandName := i.ApplicationCommandData().Name
 
