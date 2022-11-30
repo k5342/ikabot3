@@ -139,43 +139,24 @@ func (bot *DiscordBot) setupSlashCommands() {
 	}
 }
 
-func printAsReadableName(mode string) string {
-	if mode == "REGULAR" {
-		return "レギュラーマッチ"
-	}
-	if mode == "CHALLENGE" {
-		return "バンカラマッチ（チャレンジ）"
-	}
-	if mode == "OPEN" {
-		return "バンカラマッチ（オープン）"
-	}
-	if mode == "SALMON" {
-		return "サーモンラン"
-	}
-	if mode == "X" {
-		return "Xマッチ"
-	}
-	return ""
-}
-
 func printWeaponsList(weapons []WeaponInfo) string {
 	return fmt.Sprintf("%s\n%s\n%s\n%s", weapons[0].Name, weapons[1].Name, weapons[2].Name, weapons[3].Name)
 }
 
-func createMessageEmbedFromTimeSlotInfo(tsi *TimeSlotInfo, modeLabel string) *discordgo.MessageEmbed {
+func createMessageEmbedFromTimeSlotInfo(tsi *TimeSlotInfo, mode Mode) *discordgo.MessageEmbed {
 	if tsi == nil {
 		return &discordgo.MessageEmbed{
 			Author: &discordgo.MessageEmbedAuthor{
-				Name: printAsReadableName(modeLabel),
+				Name: mode.getModeName(),
 			},
 			Description: "Not Found!",
 		}
 	}
-	if modeLabel == "SALMON" {
+	if mode.getModeName() == "SALMON" {
 		return &discordgo.MessageEmbed{
 			Title: tsi.Stage.Name,
 			Author: &discordgo.MessageEmbedAuthor{
-				Name: printAsReadableName(modeLabel),
+				Name: mode.getModeName(),
 			},
 			Description: fmt.Sprintf("%d/%d %d時～%d/%d %d時\n\n%s",
 				tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
@@ -186,7 +167,7 @@ func createMessageEmbedFromTimeSlotInfo(tsi *TimeSlotInfo, modeLabel string) *di
 		return &discordgo.MessageEmbed{
 			Title: tsi.Rule.Name,
 			Author: &discordgo.MessageEmbedAuthor{
-				Name: printAsReadableName(modeLabel),
+				Name: mode.getModeName(),
 			},
 			Description: fmt.Sprintf("%d/%d %d時～%d/%d %d時\n\n%s\n%s",
 				tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
@@ -201,8 +182,8 @@ func createSingleStageInfoEmbed(sr SearchResult) *discordgo.MessageEmbed {
 }
 
 func createTwoStageInfoEmbeds(sr SearchResult) []*discordgo.MessageEmbed {
-	embed1 := createMessageEmbedFromTimeSlotInfo(sr.Slot1, "CHALLENGE")
-	embed2 := createMessageEmbedFromTimeSlotInfo(sr.Slot2, "OPEN")
+	embed1 := createMessageEmbedFromTimeSlotInfo(sr.Slot1, getMode("CHALLENGE"))
+	embed2 := createMessageEmbedFromTimeSlotInfo(sr.Slot2, getMode("OPEN"))
 	return []*discordgo.MessageEmbed{embed1, embed2}
 }
 
@@ -275,13 +256,13 @@ func interactionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var query *SearchQuery
 	modeName, found := commandName2mode[commandName]
 	if found {
-		query = &SearchQuery{Mode: modeName}
+		query = &SearchQuery{Mode: getMode(modeName)}
 	}
 
 	if commandName == "rule" {
 		opts := i.ApplicationCommandData().Options
 		if len(opts) > 0 {
-			query = &SearchQuery{Mode: "BANKARA", Rule: opts[0].Value.(string)}
+			query = &SearchQuery{Mode: getMode("BANKARA"), Rule: opts[0].Value.(string)}
 		}
 	}
 

@@ -10,7 +10,7 @@ type SearchQuery struct {
 	OriginalText  string
 	RelativeIndex string
 	TimeIndex     string
-	Mode          string
+	Mode          Mode
 	Rule          string
 }
 
@@ -114,7 +114,7 @@ func Parse(input string) *SearchQuery {
 		OriginalText:  fss[0],
 		RelativeIndex: rindex,
 		TimeIndex:     timeIndex,
-		Mode:          searchModeIdentifier(fss[6]),
+		Mode:          getMode(searchModeIdentifier(fss[6])),
 		Rule:          searchRuleIdentifier(fss[11]),
 	}
 }

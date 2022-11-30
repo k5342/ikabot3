@@ -18,6 +18,43 @@ var (
 	scheduleStore ScheduleStore
 )
 
+type ModeInfo struct {
+	Mode
+	ModeName   string
+	Identifier string
+}
+
+type Mode interface {
+	getModeName() string
+	getIdentifier() string
+}
+
+func (mi ModeInfo) getModeName() string {
+	return mi.ModeName
+}
+
+func (mi ModeInfo) getIdentifier() string {
+	return mi.Identifier
+}
+
+func getMode(identifier string) Mode {
+	modeNameTable := map[string]string{
+		"OPEN":      "バンカラマッチ（オープン）",
+		"CHALLANGE": "バンカラマッチ（チャレンジ）",
+		"X":         "Xマッチ",
+		"SALMON":    "サーモンラン",
+		"REGULAR":   "レギュラーマッチ",
+	}
+	modeName, ok := modeNameTable[identifier]
+	if !ok {
+		modeName = ""
+	}
+	return ModeInfo{
+		ModeName:   modeName,
+		Identifier: identifier,
+	}
+}
+
 // https://discord.com/oauth2/authorize?client_id=1018084105587544166&scope=bot&permissions=10737436672
 func main() {
 	err := godotenv.Load()
