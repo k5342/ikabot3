@@ -18,7 +18,7 @@ Discord サーバにボットを参加させたのち、ボットに以下のよ
 @ikabot3 オープンマッチ
 ```
 
-注: Discord の Message Content Intent を有効にするとメンション無しでも呼び出すことができます。Message Content Intent が利用可能な場合はすべてのメッセージを検索コマンドとして処理し、ステージ情報の検索結果が空でない場合のみメッセージを送信します。Message Content Intent は Privilleged Intent であるため初期値は無効です。Discord の Developer Portal で有効化したのち、.env の `IKABOT3_ALLOW_MESSAGE_CONTENT_INTENT` を `TRUE` にセットします（Gateway に利用可能な Intent を申告するようになります）。
+注: Discord の Message Content Intent を有効にするとメンション無しでも呼び出すことができます。Message Content Intent が利用可能な場合はすべてのメッセージを検索コマンドとして処理し、ステージ情報の検索結果が空でない場合のみメッセージを送信します。Message Content Intent は Privilleged Intent であるため初期値は無効です。Discord の Developer Portal で有効化したのち、.env の `IKABOT3_ALLOW_MESSAGE_CONTENT_INTENT` を `TRUE` にセットします（ボットの入出力の挙動に変化はないですが、Gateway に利用可能な Intent を申告するようになります）。
 
 ### 現在のステージ情報を得る
 キーワードに反応します
@@ -63,9 +63,10 @@ Discord サーバにボットを参加させたのち、ボットに以下のよ
 
 
 ### コマンドの例
-(@ikabot3 は適宜読み替えてください)
+他のコマンドの例はテストコード [parser_test.go](./parser_test.go) も参照してみてください。
 
 ### キーワード
+(@ikabot3 は適宜読み替えてください)
 ```
 @ikabot3 ガチマ
 @ikabot3 次の次の前の次の次のガチマッチ
@@ -81,6 +82,7 @@ Discord サーバにボットを参加させたのち、ボットに以下のよ
 @ikabot3 次のガチヤグラ
 @ikabot3 シャケ
 @ikabot3 次のサーモンラン
+@ikabot3 次のエックスマッチヤグラ
 ```
 
 ### スラッシュコマンド
@@ -99,5 +101,8 @@ Discord サーバにボットを参加させたのち、ボットに以下のよ
 ![image](https://user-images.githubusercontent.com/1993005/190213307-9f4ea554-5de4-4519-ae52-b77be7eefc18.png)
 
 ## TODO
-- Support slash commands
-- More Unit Tests
+- More slash commands
+- More unit tests
+- Configuration file (customize UA)
+- Cosmetic changes (color output for Discord embeds)
+- Cleanup codes
