@@ -18,6 +18,7 @@ type AllScheduleInfo struct {
 	Regular          []TimeSlotInfo `json:"regular"`
 	BankaraChallenge []TimeSlotInfo `json:"bankara_challenge"`
 	BankaraOpen      []TimeSlotInfo `json:"bankara_open"`
+	XMatch           []TimeSlotInfo `json:"x"`
 }
 
 type TimeSlotInfo struct {

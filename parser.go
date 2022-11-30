@@ -37,6 +37,9 @@ func searchModeIdentifier(input string) string {
 	if strings.HasPrefix(input, "リグマ") || strings.HasPrefix(input, "オープン") || strings.HasPrefix(input, "リーグ") {
 		return "OPEN"
 	}
+	if strings.HasPrefix(input, "エックス") || strings.HasPrefix(input, "X") || strings.HasPrefix(input, "x") {
+		return "X"
+	}
 	if strings.HasPrefix(input, "レギュラー") {
 		return "REGULAR"
 	}
@@ -90,7 +93,7 @@ func Parse(input string) *SearchQuery {
 	   ガチマ 20
 	   次のエリア
 	*/
-	regex := regexp.MustCompile(`(((次の|前の)*)((\d{0,2}) ?時の)?((ガチマッチ|ガチマ|ガチ|リグマ|バカマ|(レギュラー|リーグ|バンカラ|オープン|チャレンジ)(マッチ)?)?(ガチ)?(ナワバリ|ナワバリバトル|エリア|ホコ|ホコバトル|ヤグラ|アサリ)?|シャケ|サーモン|サーモンラン|鮭) ?(\d{0,2}))$`)
+	regex := regexp.MustCompile(`(((次の|前の)*)((\d{0,2}) ?時の)?((ガチマッチ|ガチマ|ガチ|リグマ|バカマ|(レギュラー|リーグ|バンカラ|オープン|チャレンジ|エックス|[Xx] ?)(マッチ)?)?(ガチ)?(ナワバリ|ナワバリバトル|エリア|ホコ|ホコバトル|ヤグラ|アサリ)?|シャケ|サーモン|サーモンラン|鮭) ?(\d{0,2}))$`)
 	fss := regex.FindStringSubmatch(input)
 	logger.Sugar().Infof("keyword input: %#v", fss)
 	var timeIndex string

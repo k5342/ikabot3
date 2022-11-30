@@ -212,6 +212,36 @@ func Test_searchModeIdentifier(t *testing.T) {
 			args: "鮭",
 			want: "SALMON",
 		},
+		{
+			name: "エックスマッチ must be proceed as X",
+			args: "エックスマッチ",
+			want: "X",
+		},
+		{
+			name: "エックス must be proceed as X",
+			args: "エックス",
+			want: "X",
+		},
+		{
+			name: "Xマッチ must be proceed as X",
+			args: "Xマッチ",
+			want: "X",
+		},
+		{
+			name: "xマッチ must be proceed as X",
+			args: "xマッチ",
+			want: "X",
+		},
+		{
+			name: "X マッチ must be proceed as X",
+			args: "X マッチ",
+			want: "X",
+		},
+		{
+			name: "x マッチ must be proceed as X",
+			args: "x マッチ",
+			want: "X",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -454,6 +484,50 @@ func TestParse(t *testing.T) {
 				TimeIndex:     "",
 				Mode:          "REGULAR",
 				Rule:          "",
+			},
+		},
+		{
+			name: "次のエックスマッチ",
+			args: "次のエックスマッチ",
+			want: &SearchQuery{
+				OriginalText:  "次のエックスマッチ",
+				RelativeIndex: "1",
+				TimeIndex:     "",
+				Mode:          "X",
+				Rule:          "",
+			},
+		},
+		{
+			name: "次の次のエックスマッチガチホコバトル",
+			args: "次の次のエックスマッチガチホコバトル",
+			want: &SearchQuery{
+				OriginalText:  "次の次のエックスマッチガチホコバトル",
+				RelativeIndex: "2",
+				TimeIndex:     "",
+				Mode:          "X",
+				Rule:          "GOAL",
+			},
+		},
+		{
+			name: "Xマッチアサリ",
+			args: "Xマッチアサリ",
+			want: &SearchQuery{
+				OriginalText:  "Xマッチアサリ",
+				RelativeIndex: "",
+				TimeIndex:     "",
+				Mode:          "X",
+				Rule:          "CLAM",
+			},
+		},
+		{
+			name: "x マッチガチエリア",
+			args: "x マッチガチエリア",
+			want: &SearchQuery{
+				OriginalText:  "x マッチガチエリア",
+				RelativeIndex: "",
+				TimeIndex:     "",
+				Mode:          "X",
+				Rule:          "AREA",
 			},
 		},
 	}
