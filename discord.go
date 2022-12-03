@@ -152,7 +152,7 @@ func createMessageEmbedFromTimeSlotInfo(tsi *TimeSlotInfo, mode Mode) *discordgo
 			Description: "Not Found!",
 		}
 	}
-	if mode.getModeName() == "SALMON" {
+	if mode.getIdentifier() == "SALMON" {
 		return &discordgo.MessageEmbed{
 			Title: tsi.Stage.Name,
 			Author: &discordgo.MessageEmbedAuthor{
