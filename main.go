@@ -37,21 +37,42 @@ func (mi ModeInfo) getIdentifier() string {
 	return mi.Identifier
 }
 
+var ModeTable map[string]ModeInfo
+
+func init() {
+	ModeTable = map[string]ModeInfo{
+		"OPEN": {
+			ModeName:   "バンカラマッチ（オープン）",
+			Identifier: "OPEN",
+		},
+		"CHALLANGE": {
+			ModeName:   "バンカラマッチ（チャレンジ）",
+			Identifier: "CHALLANGE",
+		},
+		"X": {
+			ModeName:   "Xマッチ",
+			Identifier: "X",
+		},
+		"SALMON": {
+			ModeName:   "サーモンラン",
+			Identifier: "SALMON",
+		},
+		"REGULAR": {
+			ModeName:   "レギュラーマッチ",
+			Identifier: "REGULAR",
+		},
+	}
+}
+
 func getMode(identifier string) Mode {
-	modeNameTable := map[string]string{
-		"OPEN":      "バンカラマッチ（オープン）",
-		"CHALLANGE": "バンカラマッチ（チャレンジ）",
-		"X":         "Xマッチ",
-		"SALMON":    "サーモンラン",
-		"REGULAR":   "レギュラーマッチ",
-	}
-	modeName, ok := modeNameTable[identifier]
-	if !ok {
-		modeName = ""
-	}
-	return ModeInfo{
-		ModeName:   modeName,
-		Identifier: identifier,
+	mode, found := ModeTable[identifier]
+	if found {
+		return mode
+	} else {
+		return ModeInfo{
+			ModeName:   "",
+			Identifier: identifier,
+		}
 	}
 }
 
