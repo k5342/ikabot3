@@ -22,11 +22,13 @@ type ModeInfo struct {
 	Mode
 	ModeName   string
 	Identifier string
+	Color      int
 }
 
 type Mode interface {
 	getModeName() string
 	getIdentifier() string
+	getColor() int
 }
 
 func (mi ModeInfo) getModeName() string {
@@ -37,6 +39,10 @@ func (mi ModeInfo) getIdentifier() string {
 	return mi.Identifier
 }
 
+func (mi ModeInfo) getColor() int {
+	return mi.Color
+}
+
 var ModeTable map[string]ModeInfo
 
 func init() {
@@ -44,22 +50,27 @@ func init() {
 		"OPEN": {
 			ModeName:   "バンカラマッチ（オープン）",
 			Identifier: "OPEN",
+			Color:      0xf64a10,
 		},
 		"CHALLANGE": {
 			ModeName:   "バンカラマッチ（チャレンジ）",
 			Identifier: "CHALLANGE",
+			Color:      0xf64a10,
 		},
 		"X": {
 			ModeName:   "Xマッチ",
 			Identifier: "X",
+			Color:      0x74f1a2,
 		},
 		"SALMON": {
 			ModeName:   "サーモンラン",
 			Identifier: "SALMON",
+			Color:      0xff501e,
 		},
 		"REGULAR": {
 			ModeName:   "レギュラーマッチ",
 			Identifier: "REGULAR",
+			Color:      0xd0f623,
 		},
 	}
 }
@@ -72,6 +83,7 @@ func getMode(identifier string) Mode {
 		return ModeInfo{
 			ModeName:   "",
 			Identifier: identifier,
+			Color:      0x0,
 		}
 	}
 }

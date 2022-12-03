@@ -162,6 +162,7 @@ func createMessageEmbedFromTimeSlotInfo(tsi *TimeSlotInfo, mode Mode) *discordgo
 				tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
 				tsi.EndTime.Month(), tsi.EndTime.Day(), tsi.EndTime.Hour(),
 				printWeaponsList(tsi.Weapons)),
+			Color: mode.getColor(),
 		}
 	} else {
 		return &discordgo.MessageEmbed{
@@ -173,6 +174,7 @@ func createMessageEmbedFromTimeSlotInfo(tsi *TimeSlotInfo, mode Mode) *discordgo
 				tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
 				tsi.EndTime.Month(), tsi.EndTime.Day(), tsi.EndTime.Hour(),
 				tsi.Stages[0].Name, tsi.Stages[1].Name),
+			Color: mode.getColor(),
 		}
 	}
 }
