@@ -108,7 +108,7 @@ func lookupByRule(tsinfos []TimeSlotInfo, ruleKey string, skipCount int) (matche
 func (ss *ScheduleStore) Search(query *SearchQuery) SearchResult {
 	ss.RLock()
 	defer ss.RUnlock()
-	if query.Mode.getModeName() == "SALMON" {
+	if query.Mode.getIdentifier() == "SALMON" {
 		return searchSalmon(query, ss.salmonInfo, time.Now())
 	} else {
 		return search(query, ss.info, time.Now())
@@ -138,16 +138,16 @@ func searchSalmon(query *SearchQuery, salmonInfo *[]TimeSlotInfo, timeStamp time
 func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) SearchResult {
 	logger.Sugar().Infof("search request: %#v", *query)
 	var target []TimeSlotInfo
-	if query.Mode.getModeName() == "REGULAR" {
+	if query.Mode.getIdentifier() == "REGULAR" {
 		target = info.Regular
 	}
-	if query.Mode.getModeName() == "CHALLENGE" {
+	if query.Mode.getIdentifier() == "CHALLENGE" {
 		target = info.BankaraChallenge
 	}
-	if query.Mode.getModeName() == "OPEN" {
+	if query.Mode.getIdentifier() == "OPEN" {
 		target = info.BankaraOpen
 	}
-	if query.Mode.getModeName() == "X" {
+	if query.Mode.getIdentifier() == "X" {
 		target = info.XMatch
 	}
 
@@ -162,7 +162,7 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 			skipCount = 0
 		}
 
-		if query.Mode.getModeName() == "BANKARA" {
+		if query.Mode.getIdentifier() == "BANKARA" {
 			matched1, found1 := lookupByRule(info.BankaraChallenge, query.Rule, skipCount)
 			matched2, found2 := lookupByRule(info.BankaraOpen, query.Rule, skipCount)
 			return SearchResult{
@@ -214,7 +214,7 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 	}
 	logger.Sugar().Debugf("absolute start time: %d", absoluteStartTime)
 
-	if query.Mode.getModeName() == "BANKARA" {
+	if query.Mode.getIdentifier() == "BANKARA" {
 		// search case #2: lookup both by time
 		matched1, found1 := lookupByAbsoluteTime(info.BankaraChallenge, absoluteStartTime)
 		matched2, found2 := lookupByAbsoluteTime(info.BankaraOpen, absoluteStartTime)
