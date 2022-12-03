@@ -160,12 +160,12 @@ func Test_searchModeIdentifier(t *testing.T) {
 		{
 			name: "ナワバリ must be proceed as ''",
 			args: "ナワバリ",
-			want: "",
+			want: "REGULAR", // TODO: support splatfest
 		},
 		{
 			name: "ナワバリバトル must be proceed as ''",
 			args: "ナワバリバトル",
-			want: "",
+			want: "REGULAR", // TODO: support splatfest
 		},
 		{
 			name: "レギュラーマッチ must be proceed as REGULAR",
@@ -372,7 +372,7 @@ func TestParse(t *testing.T) {
 				OriginalText:  "次のナワバリバトル",
 				RelativeIndex: "1",
 				TimeIndex:     "",
-				Mode:          getMode(""),
+				Mode:          getMode("REGULAR"), // TODO: support splatfest
 				Rule:          "TURF_WAR",
 			},
 		},
@@ -471,7 +471,7 @@ func TestParse(t *testing.T) {
 				OriginalText:  "ナワバリバトル",
 				RelativeIndex: "",
 				TimeIndex:     "",
-				Mode:          getMode(""),
+				Mode:          getMode("REGULAR"), // TODO: support splatfest
 				Rule:          "TURF_WAR",
 			},
 		},
