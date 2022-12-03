@@ -51,8 +51,8 @@ func searchModeIdentifier(input string) string {
 		return "SALMON"
 	}
 	if strings.HasPrefix(input, "ナワバリ") {
-		// possible both regular or Splatfest
-		return ""
+		// TODO: support Splatfest
+		return "REGULAR"
 	}
 	if isRuleName(input) {
 		return "BANKARA"
