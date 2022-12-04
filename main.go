@@ -52,9 +52,9 @@ func init() {
 			Identifier: "OPEN",
 			Color:      0xf64a10,
 		},
-		"CHALLANGE": {
+		"CHALLENGE": {
 			ModeName:   "バンカラマッチ（チャレンジ）",
-			Identifier: "CHALLANGE",
+			Identifier: "CHALLENGE",
 			Color:      0xf64a10,
 		},
 		"X": {
