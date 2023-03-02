@@ -42,8 +42,9 @@ type TimeSlotInfo struct {
 	Stages    []StageInfo `json:"stages"`
 	IsFest    bool        `json:"is_fest"`
 	// Salmon Run
-	Stage   StageInfo    `json:"stage"`
-	Weapons []WeaponInfo `json:"weapons"`
+	Stage    StageInfo    `json:"stage"`
+	Weapons  []WeaponInfo `json:"weapons"`
+	IsBigRun bool         `json:"is_big_run"`
 }
 
 type RuleInfo struct {
