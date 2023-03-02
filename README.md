@@ -100,15 +100,18 @@ Discord サーバにボットを参加させたのち、ボットに以下のよ
 
 ### オープンマッチ（時刻指定）
 時刻を指定して検索できます。
+
 ![image](https://user-images.githubusercontent.com/1993005/222441139-38693b2b-2d27-4c5f-94ac-48d054da4603.png)
 
 ### サーモンラン（相対指定のみ）
 最も直近に開催されるものを起点に相対指定に対応します。
+
 ![image](https://user-images.githubusercontent.com/1993005/222440646-66baf4fb-3f55-4062-87e5-ce10eb30066c.png)
 ![image](https://user-images.githubusercontent.com/1993005/222440423-bc0f1802-bb64-4743-bd3c-3f9d125b7bb2.png)
 
 ### ルール名で検索（相対指定のみ）
 チャレンジ、オープン、X マッチの中からそれぞれ検索します。
+
 ![image](https://user-images.githubusercontent.com/1993005/222440571-129d9757-dcce-44f4-b8a8-1d6443b2a4d0.png)
 
 
