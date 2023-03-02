@@ -179,14 +179,12 @@ func createMessageEmbedFromTimeSlotInfo(srs SearchResultSlot) *discordgo.Message
 	}
 }
 
-func createSingleStageInfoEmbed(sr SearchResult) *discordgo.MessageEmbed {
-	return createMessageEmbedFromTimeSlotInfo(sr.Slots[0])
-}
-
-func createTwoStageInfoEmbeds(sr SearchResult) []*discordgo.MessageEmbed {
-	embed1 := createMessageEmbedFromTimeSlotInfo(sr.Slots[0])
-	embed2 := createMessageEmbedFromTimeSlotInfo(sr.Slots[1])
-	return []*discordgo.MessageEmbed{embed1, embed2}
+func createStageInfoEmbeds(sr SearchResult) []*discordgo.MessageEmbed {
+	var embeds []*discordgo.MessageEmbed
+	for _, slot := range sr.Slots {
+		embeds = append(embeds, createMessageEmbedFromTimeSlotInfo(slot))
+	}
+	return embeds
 }
 
 func isMentioned(user *discordgo.User, mentions []*discordgo.User, messageContent string) bool {
@@ -229,11 +227,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// reply
 	var err error
 	if sr.Found {
-		if len(sr.Slots) > 1 {
-			_, err = s.ChannelMessageSendEmbedsReply(m.ChannelID, createTwoStageInfoEmbeds(sr), m.Reference())
-		} else {
-			_, err = s.ChannelMessageSendEmbedReply(m.ChannelID, createSingleStageInfoEmbed(sr), m.Reference())
-		}
+		_, err = s.ChannelMessageSendEmbedsReply(m.ChannelID, createStageInfoEmbeds(sr), m.Reference())
 	} else {
 		if isMentioned(s.State.User, m.Mentions, input) {
 			_, err = s.ChannelMessageSendReply(m.ChannelID, "Not Found!", m.Reference())
@@ -264,7 +258,7 @@ func interactionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if commandName == "rule" {
 		opts := i.ApplicationCommandData().Options
 		if len(opts) > 0 {
-			query = &SearchQuery{Mode: getMode("BANKARA"), Rule: opts[0].Value.(string)}
+			query = &SearchQuery{Mode: getMode("BYRULE"), Rule: opts[0].Value.(string)}
 		}
 	}
 
@@ -287,12 +281,7 @@ func interactionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// reply
 	var err error
 	if sr.Found {
-		var embeds []*discordgo.MessageEmbed
-		if len(sr.Slots) > 1 {
-			embeds = createTwoStageInfoEmbeds(sr)
-		} else {
-			embeds = append(embeds, createSingleStageInfoEmbed(sr))
-		}
+		embeds := createStageInfoEmbeds(sr)
 		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{

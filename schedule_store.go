@@ -163,7 +163,17 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 		}
 
 		// XXX: special case using pseudo mode
-		if query.Mode.getIdentifier() == "BANKARA" {
+		if query.Mode.getIdentifier() == "BYRULE" {
+			matched1, found1 := lookupByRule(info, getMode("CHALLENGE"), query.Rule, skipCount)
+			matched2, found2 := lookupByRule(info, getMode("OPEN"), query.Rule, skipCount)
+			matched3, found3 := lookupByRule(info, getMode("X"), query.Rule, skipCount)
+			logger.Debug("search result", zap.Any("matched1", matched1), zap.Any("matched2", matched2), zap.Any("matched3", matched3))
+			return SearchResult{
+				Query: query,
+				Found: found1 || found2 || found3,
+				Slots: []SearchResultSlot{matched1, matched2, matched3},
+			}
+		} else if query.Mode.getIdentifier() == "BANKARA" {
 			matched1, found1 := lookupByRule(info, getMode("CHALLENGE"), query.Rule, skipCount)
 			matched2, found2 := lookupByRule(info, getMode("OPEN"), query.Rule, skipCount)
 			logger.Debug("search result", zap.Any("matched1", matched1), zap.Any("matched2", matched2))
