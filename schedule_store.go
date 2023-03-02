@@ -134,8 +134,14 @@ func searchSalmon(query *SearchQuery, salmonInfo *[]TimeSlotInfo, timeStamp time
 	}
 	found := relativeIdx < len(*salmonInfo)
 	var result *TimeSlotInfo
+	var mode Mode
 	if found {
 		result = &(*salmonInfo)[relativeIdx]
+		if result.IsBigRun {
+			mode = getMode("BIGRUN")
+		} else {
+			mode = getMode("SALMON")
+		}
 	} else {
 		result = nil
 	}
@@ -143,7 +149,7 @@ func searchSalmon(query *SearchQuery, salmonInfo *[]TimeSlotInfo, timeStamp time
 		Query: query,
 		Found: found,
 		Slots: []SearchResultSlot{
-			{getMode("SALMON"), result},
+			{mode, result},
 		},
 	}
 }
