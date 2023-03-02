@@ -67,6 +67,11 @@ func init() {
 			Identifier: "SALMON",
 			Color:      0xff501e,
 		},
+		"BIGRUN": {
+			ModeName:   "ビッグラン",
+			Identifier: "SALMON",
+			Color:      0xfe0de8,
+		},
 		"REGULAR": {
 			ModeName:   "レギュラーマッチ",
 			Identifier: "REGULAR",
