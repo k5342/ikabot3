@@ -21,6 +21,20 @@ type AllScheduleInfo struct {
 	XMatch           []TimeSlotInfo `json:"x"`
 }
 
+func (asi *AllScheduleInfo) getTimeSlotInfoByMode(mode Mode) []TimeSlotInfo {
+	switch mode {
+	case getMode("REGULAR"):
+		return asi.Regular
+	case getMode("CHALLENGE"):
+		return asi.BankaraChallenge
+	case getMode("OPEN"):
+		return asi.BankaraOpen
+	case getMode("X"):
+		return asi.XMatch
+	}
+	return []TimeSlotInfo{}
+}
+
 type TimeSlotInfo struct {
 	StartTime time.Time   `json:"start_time"`
 	EndTime   time.Time   `json:"end_time"`

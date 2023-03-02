@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 type ScheduleStore struct {
@@ -12,6 +14,11 @@ type ScheduleStore struct {
 	salmonInfo  *[]TimeSlotInfo
 	cache       *FileCache
 	salmonCache *FileCache
+}
+
+type SearchResultSlot struct {
+	mode Mode
+	tsi  *TimeSlotInfo
 }
 
 func NewScheduleStore() ScheduleStore {
@@ -76,33 +83,36 @@ func (ss *ScheduleStore) MaybeRefresh() {
 }
 
 type SearchResult struct {
-	Query      *SearchQuery
-	Found      bool
-	IsTwoSlots bool
-	Slot1      *TimeSlotInfo
-	Slot2      *TimeSlotInfo
+	Query *SearchQuery
+	Found bool
+	Slots []SearchResultSlot
 }
 
-func lookupByAbsoluteTime(tsinfos []TimeSlotInfo, hour int) (matched *TimeSlotInfo, found bool) {
+func lookupByAbsoluteTime(asi *AllScheduleInfo, mode Mode, hour int) (matched SearchResultSlot, found bool) {
+	tsinfos := asi.getTimeSlotInfoByMode(mode)
+	logger.Debug("tsinfos", zap.Any("tsinfos", tsinfos))
 	for _, tsinfo := range tsinfos {
 		logger.Sugar().Infof("found => %d; req => %d\n", tsinfo.StartTime.Hour(), hour)
 		if tsinfo.StartTime.Hour() == hour && !tsinfo.IsFest {
-			return &tsinfo, true
+			logger.Debug("found", zap.Any("tsinfo", tsinfo))
+			return SearchResultSlot{mode, &tsinfo}, true
 		}
 	}
-	return nil, false
+	return SearchResultSlot{mode, nil}, false
 }
 
-func lookupByRule(tsinfos []TimeSlotInfo, ruleKey string, skipCount int) (matched *TimeSlotInfo, found bool) {
+func lookupByRule(asi *AllScheduleInfo, mode Mode, ruleKey string, skipCount int) (matched SearchResultSlot, found bool) {
+	tsinfos := asi.getTimeSlotInfoByMode(mode)
+	logger.Debug("tsinfos", zap.Any("tsinfos", tsinfos))
 	for _, tsinfo := range tsinfos {
 		if tsinfo.Rule.Key == ruleKey && !tsinfo.IsFest {
 			if skipCount <= 0 {
-				return &tsinfo, true
+				return SearchResultSlot{mode, &tsinfo}, true
 			}
 			skipCount -= 1
 		}
 	}
-	return nil, false
+	return SearchResultSlot{mode, nil}, false
 }
 
 func (ss *ScheduleStore) Search(query *SearchQuery) SearchResult {
@@ -111,7 +121,9 @@ func (ss *ScheduleStore) Search(query *SearchQuery) SearchResult {
 	if query.Mode.getIdentifier() == "SALMON" {
 		return searchSalmon(query, ss.salmonInfo, time.Now())
 	} else {
-		return search(query, ss.info, time.Now())
+		sr := search(query, ss.info, time.Now())
+		logger.Debug("search result", zap.Any("result", sr))
+		return sr
 	}
 }
 
@@ -128,28 +140,16 @@ func searchSalmon(query *SearchQuery, salmonInfo *[]TimeSlotInfo, timeStamp time
 		result = nil
 	}
 	return SearchResult{
-		Query:      query,
-		Found:      found,
-		IsTwoSlots: false,
-		Slot1:      result,
+		Query: query,
+		Found: found,
+		Slots: []SearchResultSlot{
+			{getMode("SALMON"), result},
+		},
 	}
 }
 
 func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) SearchResult {
 	logger.Sugar().Infof("search request: %#v", *query)
-	var target []TimeSlotInfo
-	if query.Mode.getIdentifier() == "REGULAR" {
-		target = info.Regular
-	}
-	if query.Mode.getIdentifier() == "CHALLENGE" {
-		target = info.BankaraChallenge
-	}
-	if query.Mode.getIdentifier() == "OPEN" {
-		target = info.BankaraOpen
-	}
-	if query.Mode.getIdentifier() == "X" {
-		target = info.XMatch
-	}
 
 	// search case #1: filter by rule
 	if query.Rule != "" {
@@ -162,32 +162,42 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 			skipCount = 0
 		}
 
-		if query.Mode.getIdentifier() == "BANKARA" {
-			matched1, found1 := lookupByRule(info.BankaraChallenge, query.Rule, skipCount)
-			matched2, found2 := lookupByRule(info.BankaraOpen, query.Rule, skipCount)
+		// XXX: special case using pseudo mode
+		if query.Mode.getIdentifier() == "BYRULE" {
+			matched1, found1 := lookupByRule(info, getMode("CHALLENGE"), query.Rule, skipCount)
+			matched2, found2 := lookupByRule(info, getMode("OPEN"), query.Rule, skipCount)
+			matched3, found3 := lookupByRule(info, getMode("X"), query.Rule, skipCount)
+			logger.Debug("search result", zap.Any("matched1", matched1), zap.Any("matched2", matched2), zap.Any("matched3", matched3))
 			return SearchResult{
-				Query:      query,
-				Found:      found1 || found2,
-				IsTwoSlots: true,
-				Slot1:      matched1,
-				Slot2:      matched2,
+				Query: query,
+				Found: found1 || found2 || found3,
+				Slots: []SearchResultSlot{matched1, matched2, matched3},
+			}
+		} else if query.Mode.getIdentifier() == "BANKARA" {
+			matched1, found1 := lookupByRule(info, getMode("CHALLENGE"), query.Rule, skipCount)
+			matched2, found2 := lookupByRule(info, getMode("OPEN"), query.Rule, skipCount)
+			logger.Debug("search result", zap.Any("matched1", matched1), zap.Any("matched2", matched2))
+			return SearchResult{
+				Query: query,
+				Found: found1 || found2,
+				Slots: []SearchResultSlot{matched1, matched2},
 			}
 		} else if query.Rule == "TURF_WAR" {
 			// TODO: support Splatfest schedule search
-			matched, found := lookupByRule(info.Regular, query.Rule, skipCount)
+			matched, found := lookupByRule(info, getMode("REGULAR"), query.Rule, skipCount)
+			logger.Debug("search result", zap.Any("matched", matched))
 			return SearchResult{
-				Query:      query,
-				Found:      found,
-				IsTwoSlots: false,
-				Slot1:      matched,
+				Query: query,
+				Found: found,
+				Slots: []SearchResultSlot{matched},
 			}
 		} else {
-			matched, found := lookupByRule(target, query.Rule, skipCount)
+			matched, found := lookupByRule(info, query.Mode, query.Rule, skipCount)
+			logger.Debug("search result", zap.Any("matched", matched))
 			return SearchResult{
-				Query:      query,
-				Found:      found,
-				IsTwoSlots: false,
-				Slot1:      matched,
+				Query: query,
+				Found: found,
+				Slots: []SearchResultSlot{matched},
 			}
 		}
 	}
@@ -216,23 +226,22 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 
 	if query.Mode.getIdentifier() == "BANKARA" {
 		// search case #2: lookup both by time
-		matched1, found1 := lookupByAbsoluteTime(info.BankaraChallenge, absoluteStartTime)
-		matched2, found2 := lookupByAbsoluteTime(info.BankaraOpen, absoluteStartTime)
+		matched1, found1 := lookupByAbsoluteTime(info, getMode("CHALLENGE"), absoluteStartTime)
+		matched2, found2 := lookupByAbsoluteTime(info, getMode("OPEN"), absoluteStartTime)
+		logger.Debug("search result", zap.Any("matched1", matched1), zap.Any("matched2", matched2))
 		return SearchResult{
-			Query:      query,
-			Found:      found1 || found2,
-			IsTwoSlots: true,
-			Slot1:      matched1,
-			Slot2:      matched2,
+			Query: query,
+			Found: found1 || found2,
+			Slots: []SearchResultSlot{matched1, matched2},
 		}
 	} else {
 		// search case #3: lookup single by time
-		matched, found := lookupByAbsoluteTime(target, absoluteStartTime)
+		matched, found := lookupByAbsoluteTime(info, query.Mode, absoluteStartTime)
+		logger.Debug("search result", zap.Any("matched", matched))
 		return SearchResult{
-			Query:      query,
-			Found:      found,
-			IsTwoSlots: false,
-			Slot1:      matched,
+			Query: query,
+			Found: found,
+			Slots: []SearchResultSlot{matched},
 		}
 	}
 }

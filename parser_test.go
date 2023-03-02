@@ -383,7 +383,7 @@ func TestParse(t *testing.T) {
 				OriginalText:  "エリア20",
 				RelativeIndex: "",
 				TimeIndex:     "20", // XXX: parser returns both info even if conflict search mode with rule and timeIndex
-				Mode:          getMode("BANKARA"),
+				Mode:          getMode("BYRULE"),
 				Rule:          "AREA",
 			},
 		},
@@ -416,7 +416,7 @@ func TestParse(t *testing.T) {
 				OriginalText:  "次のエリア",
 				RelativeIndex: "1",
 				TimeIndex:     "",
-				Mode:          getMode("BANKARA"),
+				Mode:          getMode("BYRULE"),
 				Rule:          "AREA",
 			},
 		},
@@ -427,7 +427,7 @@ func TestParse(t *testing.T) {
 				OriginalText:  "次のガチヤグラ",
 				RelativeIndex: "1",
 				TimeIndex:     "",
-				Mode:          getMode("BANKARA"), // not ガチマヤグラ
+				Mode:          getMode("BYRULE"), // not ガチマヤグラ
 				Rule:          "LOFT",
 			},
 		},

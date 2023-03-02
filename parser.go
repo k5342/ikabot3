@@ -10,8 +10,9 @@ type SearchQuery struct {
 	OriginalText  string
 	RelativeIndex string
 	TimeIndex     string
-	Mode          Mode
-	Rule          string
+	// XXX: double-meaning game mode and search mode; allows pseudo mode here
+	Mode Mode
+	Rule string
 }
 
 // <command> := [前の|次の]+<type> | <type><time>
@@ -55,7 +56,7 @@ func searchModeIdentifier(input string) string {
 		return "REGULAR"
 	}
 	if isRuleName(input) {
-		return "BANKARA"
+		return "BYRULE"
 	}
 	return ""
 }

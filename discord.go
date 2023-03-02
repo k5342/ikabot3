@@ -143,50 +143,48 @@ func printWeaponsList(weapons []WeaponInfo) string {
 	return fmt.Sprintf("%s\n%s\n%s\n%s", weapons[0].Name, weapons[1].Name, weapons[2].Name, weapons[3].Name)
 }
 
-func createMessageEmbedFromTimeSlotInfo(tsi *TimeSlotInfo, mode Mode) *discordgo.MessageEmbed {
-	if tsi == nil {
+func createMessageEmbedFromTimeSlotInfo(srs SearchResultSlot) *discordgo.MessageEmbed {
+	if srs.tsi == nil {
 		return &discordgo.MessageEmbed{
 			Author: &discordgo.MessageEmbedAuthor{
-				Name: mode.getModeName(),
+				Name: srs.mode.getModeName(),
 			},
 			Description: "Not Found!",
 		}
 	}
-	if mode.getIdentifier() == "SALMON" {
+	if srs.mode.getIdentifier() == "SALMON" {
 		return &discordgo.MessageEmbed{
-			Title: tsi.Stage.Name,
+			Title: srs.tsi.Stage.Name,
 			Author: &discordgo.MessageEmbedAuthor{
-				Name: mode.getModeName(),
+				Name: srs.mode.getModeName(),
 			},
 			Description: fmt.Sprintf("%d/%d %d時～%d/%d %d時\n\n%s",
-				tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
-				tsi.EndTime.Month(), tsi.EndTime.Day(), tsi.EndTime.Hour(),
-				printWeaponsList(tsi.Weapons)),
-			Color: mode.getColor(),
+				srs.tsi.StartTime.Month(), srs.tsi.StartTime.Day(), srs.tsi.StartTime.Hour(),
+				srs.tsi.EndTime.Month(), srs.tsi.EndTime.Day(), srs.tsi.EndTime.Hour(),
+				printWeaponsList(srs.tsi.Weapons)),
+			Color: srs.mode.getColor(),
 		}
 	} else {
 		return &discordgo.MessageEmbed{
-			Title: tsi.Rule.Name,
+			Title: srs.tsi.Rule.Name,
 			Author: &discordgo.MessageEmbedAuthor{
-				Name: mode.getModeName(),
+				Name: srs.mode.getModeName(),
 			},
 			Description: fmt.Sprintf("%d/%d %d時～%d/%d %d時\n\n%s\n%s",
-				tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
-				tsi.EndTime.Month(), tsi.EndTime.Day(), tsi.EndTime.Hour(),
-				tsi.Stages[0].Name, tsi.Stages[1].Name),
-			Color: mode.getColor(),
+				srs.tsi.StartTime.Month(), srs.tsi.StartTime.Day(), srs.tsi.StartTime.Hour(),
+				srs.tsi.EndTime.Month(), srs.tsi.EndTime.Day(), srs.tsi.EndTime.Hour(),
+				srs.tsi.Stages[0].Name, srs.tsi.Stages[1].Name),
+			Color: srs.mode.getColor(),
 		}
 	}
 }
 
-func createSingleStageInfoEmbed(sr SearchResult) *discordgo.MessageEmbed {
-	return createMessageEmbedFromTimeSlotInfo(sr.Slot1, sr.Query.Mode)
-}
-
-func createTwoStageInfoEmbeds(sr SearchResult) []*discordgo.MessageEmbed {
-	embed1 := createMessageEmbedFromTimeSlotInfo(sr.Slot1, getMode("CHALLENGE"))
-	embed2 := createMessageEmbedFromTimeSlotInfo(sr.Slot2, getMode("OPEN"))
-	return []*discordgo.MessageEmbed{embed1, embed2}
+func createStageInfoEmbeds(sr SearchResult) []*discordgo.MessageEmbed {
+	var embeds []*discordgo.MessageEmbed
+	for _, slot := range sr.Slots {
+		embeds = append(embeds, createMessageEmbedFromTimeSlotInfo(slot))
+	}
+	return embeds
 }
 
 func isMentioned(user *discordgo.User, mentions []*discordgo.User, messageContent string) bool {
@@ -229,11 +227,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// reply
 	var err error
 	if sr.Found {
-		if sr.IsTwoSlots {
-			_, err = s.ChannelMessageSendEmbedsReply(m.ChannelID, createTwoStageInfoEmbeds(sr), m.Reference())
-		} else {
-			_, err = s.ChannelMessageSendEmbedReply(m.ChannelID, createSingleStageInfoEmbed(sr), m.Reference())
-		}
+		_, err = s.ChannelMessageSendEmbedsReply(m.ChannelID, createStageInfoEmbeds(sr), m.Reference())
 	} else {
 		if isMentioned(s.State.User, m.Mentions, input) {
 			_, err = s.ChannelMessageSendReply(m.ChannelID, "Not Found!", m.Reference())
@@ -264,7 +258,7 @@ func interactionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if commandName == "rule" {
 		opts := i.ApplicationCommandData().Options
 		if len(opts) > 0 {
-			query = &SearchQuery{Mode: getMode("BANKARA"), Rule: opts[0].Value.(string)}
+			query = &SearchQuery{Mode: getMode("BYRULE"), Rule: opts[0].Value.(string)}
 		}
 	}
 
@@ -287,12 +281,7 @@ func interactionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// reply
 	var err error
 	if sr.Found {
-		var embeds []*discordgo.MessageEmbed
-		if sr.IsTwoSlots {
-			embeds = createTwoStageInfoEmbeds(sr)
-		} else {
-			embeds = append(embeds, createSingleStageInfoEmbed(sr))
-		}
+		embeds := createStageInfoEmbeds(sr)
 		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
