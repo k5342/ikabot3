@@ -143,49 +143,49 @@ func printWeaponsList(weapons []WeaponInfo) string {
 	return fmt.Sprintf("%s\n%s\n%s\n%s", weapons[0].Name, weapons[1].Name, weapons[2].Name, weapons[3].Name)
 }
 
-func createMessageEmbedFromTimeSlotInfo(tsi *TimeSlotInfo, mode Mode) *discordgo.MessageEmbed {
-	if tsi == nil {
+func createMessageEmbedFromTimeSlotInfo(srs SearchResultSlot) *discordgo.MessageEmbed {
+	if srs.tsi == nil {
 		return &discordgo.MessageEmbed{
 			Author: &discordgo.MessageEmbedAuthor{
-				Name: mode.getModeName(),
+				Name: srs.mode.getModeName(),
 			},
 			Description: "Not Found!",
 		}
 	}
-	if mode.getIdentifier() == "SALMON" {
+	if srs.mode.getIdentifier() == "SALMON" {
 		return &discordgo.MessageEmbed{
-			Title: tsi.Stage.Name,
+			Title: srs.tsi.Stage.Name,
 			Author: &discordgo.MessageEmbedAuthor{
-				Name: mode.getModeName(),
+				Name: srs.mode.getModeName(),
 			},
 			Description: fmt.Sprintf("%d/%d %d時～%d/%d %d時\n\n%s",
-				tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
-				tsi.EndTime.Month(), tsi.EndTime.Day(), tsi.EndTime.Hour(),
-				printWeaponsList(tsi.Weapons)),
-			Color: mode.getColor(),
+				srs.tsi.StartTime.Month(), srs.tsi.StartTime.Day(), srs.tsi.StartTime.Hour(),
+				srs.tsi.EndTime.Month(), srs.tsi.EndTime.Day(), srs.tsi.EndTime.Hour(),
+				printWeaponsList(srs.tsi.Weapons)),
+			Color: srs.mode.getColor(),
 		}
 	} else {
 		return &discordgo.MessageEmbed{
-			Title: tsi.Rule.Name,
+			Title: srs.tsi.Rule.Name,
 			Author: &discordgo.MessageEmbedAuthor{
-				Name: mode.getModeName(),
+				Name: srs.mode.getModeName(),
 			},
 			Description: fmt.Sprintf("%d/%d %d時～%d/%d %d時\n\n%s\n%s",
-				tsi.StartTime.Month(), tsi.StartTime.Day(), tsi.StartTime.Hour(),
-				tsi.EndTime.Month(), tsi.EndTime.Day(), tsi.EndTime.Hour(),
-				tsi.Stages[0].Name, tsi.Stages[1].Name),
-			Color: mode.getColor(),
+				srs.tsi.StartTime.Month(), srs.tsi.StartTime.Day(), srs.tsi.StartTime.Hour(),
+				srs.tsi.EndTime.Month(), srs.tsi.EndTime.Day(), srs.tsi.EndTime.Hour(),
+				srs.tsi.Stages[0].Name, srs.tsi.Stages[1].Name),
+			Color: srs.mode.getColor(),
 		}
 	}
 }
 
 func createSingleStageInfoEmbed(sr SearchResult) *discordgo.MessageEmbed {
-	return createMessageEmbedFromTimeSlotInfo(sr.Slots[0], sr.Query.Mode)
+	return createMessageEmbedFromTimeSlotInfo(sr.Slots[0])
 }
 
 func createTwoStageInfoEmbeds(sr SearchResult) []*discordgo.MessageEmbed {
-	embed1 := createMessageEmbedFromTimeSlotInfo(sr.Slots[0], getMode("CHALLENGE"))
-	embed2 := createMessageEmbedFromTimeSlotInfo(sr.Slots[1], getMode("OPEN"))
+	embed1 := createMessageEmbedFromTimeSlotInfo(sr.Slots[0])
+	embed2 := createMessageEmbedFromTimeSlotInfo(sr.Slots[1])
 	return []*discordgo.MessageEmbed{embed1, embed2}
 }
 
