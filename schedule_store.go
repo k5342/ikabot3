@@ -76,11 +76,9 @@ func (ss *ScheduleStore) MaybeRefresh() {
 }
 
 type SearchResult struct {
-	Query      *SearchQuery
-	Found      bool
-	IsTwoSlots bool
-	Slot1      *TimeSlotInfo
-	Slot2      *TimeSlotInfo
+	Query *SearchQuery
+	Found bool
+	Slots []*TimeSlotInfo
 }
 
 func lookupByAbsoluteTime(tsinfos []TimeSlotInfo, hour int) (matched *TimeSlotInfo, found bool) {
@@ -128,10 +126,9 @@ func searchSalmon(query *SearchQuery, salmonInfo *[]TimeSlotInfo, timeStamp time
 		result = nil
 	}
 	return SearchResult{
-		Query:      query,
-		Found:      found,
-		IsTwoSlots: false,
-		Slot1:      result,
+		Query: query,
+		Found: found,
+		Slots: []*TimeSlotInfo{result},
 	}
 }
 
@@ -166,28 +163,24 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 			matched1, found1 := lookupByRule(info.BankaraChallenge, query.Rule, skipCount)
 			matched2, found2 := lookupByRule(info.BankaraOpen, query.Rule, skipCount)
 			return SearchResult{
-				Query:      query,
-				Found:      found1 || found2,
-				IsTwoSlots: true,
-				Slot1:      matched1,
-				Slot2:      matched2,
+				Query: query,
+				Found: found1 || found2,
+				Slots: []*TimeSlotInfo{matched1, matched2},
 			}
 		} else if query.Rule == "TURF_WAR" {
 			// TODO: support Splatfest schedule search
 			matched, found := lookupByRule(info.Regular, query.Rule, skipCount)
 			return SearchResult{
-				Query:      query,
-				Found:      found,
-				IsTwoSlots: false,
-				Slot1:      matched,
+				Query: query,
+				Found: found,
+				Slots: []*TimeSlotInfo{matched},
 			}
 		} else {
 			matched, found := lookupByRule(target, query.Rule, skipCount)
 			return SearchResult{
-				Query:      query,
-				Found:      found,
-				IsTwoSlots: false,
-				Slot1:      matched,
+				Query: query,
+				Found: found,
+				Slots: []*TimeSlotInfo{matched},
 			}
 		}
 	}
@@ -219,20 +212,17 @@ func search(query *SearchQuery, info *AllScheduleInfo, timeStamp time.Time) Sear
 		matched1, found1 := lookupByAbsoluteTime(info.BankaraChallenge, absoluteStartTime)
 		matched2, found2 := lookupByAbsoluteTime(info.BankaraOpen, absoluteStartTime)
 		return SearchResult{
-			Query:      query,
-			Found:      found1 || found2,
-			IsTwoSlots: true,
-			Slot1:      matched1,
-			Slot2:      matched2,
+			Query: query,
+			Found: found1 || found2,
+			Slots: []*TimeSlotInfo{matched1, matched2},
 		}
 	} else {
 		// search case #3: lookup single by time
 		matched, found := lookupByAbsoluteTime(target, absoluteStartTime)
 		return SearchResult{
-			Query:      query,
-			Found:      found,
-			IsTwoSlots: false,
-			Slot1:      matched,
+			Query: query,
+			Found: found,
+			Slots: []*TimeSlotInfo{matched},
 		}
 	}
 }

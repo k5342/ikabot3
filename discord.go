@@ -180,12 +180,12 @@ func createMessageEmbedFromTimeSlotInfo(tsi *TimeSlotInfo, mode Mode) *discordgo
 }
 
 func createSingleStageInfoEmbed(sr SearchResult) *discordgo.MessageEmbed {
-	return createMessageEmbedFromTimeSlotInfo(sr.Slot1, sr.Query.Mode)
+	return createMessageEmbedFromTimeSlotInfo(sr.Slots[0], sr.Query.Mode)
 }
 
 func createTwoStageInfoEmbeds(sr SearchResult) []*discordgo.MessageEmbed {
-	embed1 := createMessageEmbedFromTimeSlotInfo(sr.Slot1, getMode("CHALLENGE"))
-	embed2 := createMessageEmbedFromTimeSlotInfo(sr.Slot2, getMode("OPEN"))
+	embed1 := createMessageEmbedFromTimeSlotInfo(sr.Slots[0], getMode("CHALLENGE"))
+	embed2 := createMessageEmbedFromTimeSlotInfo(sr.Slots[1], getMode("OPEN"))
 	return []*discordgo.MessageEmbed{embed1, embed2}
 }
 
@@ -229,7 +229,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// reply
 	var err error
 	if sr.Found {
-		if sr.IsTwoSlots {
+		if len(sr.Slots) > 1 {
 			_, err = s.ChannelMessageSendEmbedsReply(m.ChannelID, createTwoStageInfoEmbeds(sr), m.Reference())
 		} else {
 			_, err = s.ChannelMessageSendEmbedReply(m.ChannelID, createSingleStageInfoEmbed(sr), m.Reference())
@@ -288,7 +288,7 @@ func interactionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	var err error
 	if sr.Found {
 		var embeds []*discordgo.MessageEmbed
-		if sr.IsTwoSlots {
+		if len(sr.Slots) > 1 {
 			embeds = createTwoStageInfoEmbeds(sr)
 		} else {
 			embeds = append(embeds, createSingleStageInfoEmbed(sr))
